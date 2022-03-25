@@ -3,17 +3,18 @@ library(shinythemes)
 library(shinyBS)
 library(jsonlite)
 library(markdown)
+library(here)
 
-pops <- fromJSON("docs/popovers.json")
+pops <- read_json(path = here("vocab_norms","docs","popovers.json"))
 
-shinyUI(fluidPage(
+fluidPage(
 
   theme = shinytheme("spacelab"),
 
   br(),
   bsCollapse(id = "doc", open = "title",
              bsCollapsePanel(title = h3("Vocabulary Norms"),
-                             includeMarkdown("docs/description.md"),
+                             includeMarkdown(here("vocab_norms","docs","description.md")),
                              value = "title",
                              style = "default")),
 
@@ -89,4 +90,4 @@ shinyUI(fluidPage(
            )
     )
   )
-))
+)
