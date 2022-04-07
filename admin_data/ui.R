@@ -1,7 +1,8 @@
+###################### CHILD-LEVEL SUMMARY DATA (ADMINS) ######################
 library(shiny)
 library(shinythemes)
 
-shinyUI(fluidPage(
+fluidPage(
 
   theme = shinytheme("spacelab"),
 
@@ -22,8 +23,8 @@ shinyUI(fluidPage(
       column(4, uiOutput("age_selector"))
     ),
     fluidRow(
-      column(3, uiOutput("gender_selector")),
-      column(3, uiOutput("momed_selector")),
+      column(3, uiOutput("health_conditions_selector")),
+      column(3, uiOutput("language_status_selector")),
       br(),
       column(5, downloadButton("download_data", "Download Data", class = "btn-xs"),
              align = "right")
@@ -33,4 +34,4 @@ shinyUI(fluidPage(
       column(11, dataTableOutput(outputId = "table"))
     )
   )
-))
+)
