@@ -1,38 +1,46 @@
 library(shiny)
-library(dplyr)
-library(DT)
-library(wordbankr)
-mode <- "local"
-
+#library(dplyr)
+#library(DT)
+#library(wordbankr)
+#mode <- "local"
+source(here("common.R"))
 # input <- list(language = "English (American)", form = "WS", age = c(18, 30))
 
-shinyServer(function(input, output, session) {
+function(input, output, session) {
 
   output$loaded <- reactive(0)
   outputOptions(output, "loaded", suspendWhenHidden = FALSE)
 
-  instruments <- get_instruments(mode = mode)
+  instruments <- get_instruments(mode = mode, db_args = db_args)
   languages <- sort(unique(instruments$language))
-
+  
   start_language <- "English (American)"
   start_form <- "WS"
 
   data <- eventReactive(input$get_data, {
 
-    req(input$language, input$form)
+    req(input$language, 
+        input$form)
 
-    get_instrument_data(input$language, input$form,
-                        administrations = TRUE,
-                        iteminfo = TRUE,
-                        mode = mode) %>%
-      select(data_id, age, sex, mom_ed, value, item_id, type, category,
-             definition) %>%
+    get_instrument_data(language = input$language, 
+                        form = input$form,
+                        item_info = TRUE,
+                        administration_info = TRUE,
+                        mode = mode, 
+                        db_args = db_args) %>% 
+      left_join(get_administration_data(language = input$language, 
+                                        form = input$form, 
+                                        include_demographic_info = TRUE,
+                                        mode = mode, 
+                                        db_args = db_args)) %>%
+      select(data_id, age, caregiver_education, sex, value, item_id, category,
+             item_definition) %>% # also had 'type'?
       arrange(data_id)
-
   })
 
   output$table <- DT::renderDataTable(
-    data(), filter = "top", style = "bootstrap", rownames = FALSE,
+    data(), server = TRUE, filter = "top", style = "bootstrap", 
+    rownames = FALSE, selection = "multiple",
     options = list(orderClasses = TRUE, processing = TRUE, pageLength = 25)
   )
 
@@ -78,4 +86,4 @@ shinyServer(function(input, output, session) {
 
   output$loaded <- reactive(1)
 
-})
+}
