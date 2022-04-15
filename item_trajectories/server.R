@@ -22,7 +22,13 @@ admins <- get_administration_data(mode = mode, db_args = db_args,
          typically_developing = map_lgl(health_conditions, 
                                         function(health_conditions) {
                                           is_null(health_conditions)
-                                        }))
+                                        }))  |>
+  group_by(child_id) |>
+  arrange(age) |>
+  mutate(n = 1:n(), 
+         longitudinal = n > 1,
+         first_administration = n == 1)
+  
 
 items <- get_item_data(mode = mode, db_args = db_args) 
 # |>
@@ -32,9 +38,10 @@ instruments <- get_instruments(mode = mode, db_args = db_args)
 languages <- sort(unique(instruments$language))
 
 
-instrument_tables <- items %>%
-  group_by(language, form) %>%
-  filter(item_kind == "word") %>%
+instrument_tables <- items  |>
+  left_join(instruments) |>
+  group_by(language, form, instrument_id) |>
+  filter(item_kind == "word")  |>
   nest()
 
 alerted <- FALSE
@@ -99,6 +106,8 @@ function(input, output, session) {
     req(input$language)
     req(input$form)
     
+    print("word options") 
+    
     filter(instrument_tables, 
            language == input$language, 
            form %in% input$form) %>%
@@ -120,10 +129,10 @@ function(input, output, session) {
   # FIXME - NEED NEW FILTERS
   output$data_filter <- renderUI({
     
-    possible_filters =  c("cross-sectional only" = "cross_sectional",
-                          "normative sample" = "is_norming", 
-                          "monolingual" = "monolingual", 
-                          "typically developing" = "typically_developing")
+    possible_filters =  c("cross-sectional only" = "first_administration",
+                          "normative sample only" = "is_norming", 
+                          "monolingual only" = "monolingual", 
+                          "typically developing only" = "typically_developing")
     
     # available_filters <- Filter(
     #   function(data_filter) !all(is.na(form_admins()[[data_filter]]) |
@@ -133,7 +142,7 @@ function(input, output, session) {
     
     checkboxGroupInput("data_filter", "Choose Data",
                        choices = possible_filters,
-                       selected = c("cross_sectional","monolingual","typically_developing"))
+                       selected = NULL) #c("first_administration","monolingual","typically_developing"))
     
   })
   
@@ -153,7 +162,7 @@ function(input, output, session) {
     }
   })
     
-  instrument <- reactive({
+  filtered_instrument_tables <- reactive({
     req(input$language)
     req(input$form)
     
@@ -163,39 +172,35 @@ function(input, output, session) {
   
   # ---------------------- DATA LOADING
   
-  form_admins <- reactive({
+  filtered_admins <- reactive({
     req(input$language)
     req(input$form)
+    # req(input$data_filter)
+    
+    print("form specific admins")
     
     form_specific_admins <- admins |>
       filter(language == input$language, 
-             form %in% input$form, 
-             monolingual == input$monolingual,
-             cross_sectional == !input$longitudinal,
-             is_norming == input$is_norming, 
-             typically_developing == input$typically_developing)
-  })
-
-  filtered_admins <- reactive({
-    # req(form_admins())
-    # req(input_cross_sectional())
-    # req(input_norming())
-
-    filtered_admins <- form_admins()
-
-    # if (input_cross_sectional())
-    #   filtered_admins <- filter(filtered_admins, cross_sectional == TRUE)
+             form %in% input$form)
     # 
-    # if (input_norming())
-    #   filtered_admins <- filter(filtered_admins, norming == TRUE)
+    # form_specific_admins <- walk(input$data_filter, function(filter_condition) { 
+    #   filter_condition <- enquo(filter_condition)
+    #   form_specific_admins %<>% filter(!!filter_condition)
+    # })
 
-    filtered_admins
   })
 
   trajectory_data <- reactive({
+    req(filtered_admins()) 
+    req(filtered_instrument_tables()) 
+    req(input$words)
+    
+    print("trajectory data")
+    
+    # in case you have changed instruments and your words no longer apply, don't crash
     if (all(input$words %in% word_options())) {
-      trajectory_data_fun(filtered_admins(), instrument(), input$measure, input$words) |>
-        mutate(item = factor(item, levels = input$words))
+      trajectory_data_fun(filtered_admins(), filtered_instrument_tables(), input$measure, input$words) |>
+        mutate(item = factor(item_definition, levels = input$words))
     } else {
       data.frame()
     }
@@ -215,23 +220,39 @@ function(input, output, session) {
     else if (input$measure == "produces") "Proportion of Children Producing"
   })
 
-  age_min <- reactive(min(instrument()$age_min))
+  age_lims <- reactive({
+    req(input$form)
+    req(input$language)
+    filtered_instruments <- filter(instruments, 
+           language == input$language,
+           form %in% input$form) 
+    
+    c(min(filtered_instruments$age_min), 
+      max(filtered_instruments$age_max))
+  })
+  
   age_max <- reactive(max(instrument()$age_max))
 
   trajectory_plot <- function() {
+    
+    print("trajectory plot")
+    
+    print(trajectory_data())
+    
     traj <- trajectory_data()
     if (nrow(traj) == 0) {
       ggplot(traj) +
         geom_point() +
         scale_x_continuous(name = "\nAge (months)",
-                           breaks = age_min():age_max(),
-                           limits = c(age_min(), age_max() + 3)) +
+                           breaks = age_lims()[1]:age_lims()[2],
+                           limits = c(age_lims()[1], age_lims()[2] + 3)) +
         scale_y_continuous(name = sprintf("%s\n", ylabel()),
                            limits = c(-0.01, 1),
                            breaks = seq(0, 1, 0.25))
     } else {
-      amin <- age_min()
-      amax <- age_max()
+      amin <- age_lims()[1]
+      amax <- age_lims()[2]
+      
       g <- ggplot(traj, aes(x = age, y = prop, colour = item, fill = item, label = item)) +
         # geom_smooth(aes(linetype = type, weight = total), method = "glm",
         #             method.args = list(family = "binomial")) +
