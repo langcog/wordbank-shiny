@@ -45,11 +45,12 @@ fluidPage(
                uiOutput("data_filter")),
 
              wellPanel(
-               popify(selectInput("words", label = strong("Words"),
-                                  choices = NULL, multiple = TRUE),
-                      title = NULL,
-                      content = HTML(sprintf("<small>%s</small>", pops$words)),
-                      placement = "right"),
+               # popify(selectInput("words", label = strong("Words"),
+               #                    choices = NULL, multiple = TRUE),
+               #        title = NULL,
+               #        content = HTML(sprintf("<small>%s</small>", pops$words)),
+               #        placement = "right"),
+               uiOutput("word_selector"),
                checkboxInput("mean", "Mean of words"))
            )),
 

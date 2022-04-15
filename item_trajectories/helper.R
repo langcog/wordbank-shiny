@@ -1,21 +1,21 @@
 
-list_items_by_definition <- function(item_data) {
-  items <- item_data$item_id
-  names(items) <- ifelse(is.na(item_data$uni_lemma),
-                         item_data$item_definition,
-                         paste0(item_data$item_definition,"\n(", item_data$uni_lemma,")")
-  )
-  return(items)
-}
-
-list_items_by_id <- function(item_data) {
-  items <- ifelse(is.na(item_data$uni_lemma),
-                  item_data$item_definition,
-                  paste0(item_data$item_definition,"\n(", item_data$uni_lemma,")")
-  )
-  names(items) <- item_data$item_id
-  return(items)
-}
+# list_items_by_definition <- function(item_data) {
+#   items <- item_data$item_id
+#   names(items) <- ifelse(is.na(item_data$uni_lemma),
+#                          item_data$item_definition,
+#                          paste0(item_data$item_definition,"\n(", item_data$uni_lemma,")")
+#   )
+#   return(items)
+# }
+# 
+# list_items_by_id <- function(item_data) {
+#   items <- ifelse(is.na(item_data$uni_lemma),
+#                   item_data$item_definition,
+#                   paste0(item_data$item_definition,"\n(", item_data$uni_lemma,")")
+#   )
+#   names(items) <- item_data$item_id
+#   return(items)
+# }
 
 trajectory_data_fun <- function(admins, fun_instrument, fun_measure,
                                 fun_words) {
