@@ -39,9 +39,14 @@ shinyUI(fluidPage(
                  ".shiny-output-error { visibility: hidden; }",
                  ".shiny-output-error:before { visibility: hidden; }"),
       conditionalPanel(
-        condition = "output.loaded == 1",
-        downloadButton("download_all", "Download data as CSV",
-                       class = "btn-default btn-xs"),
+        condition="($('html').hasClass('shiny-busy'))",
+        fluidRow(column(12, tags$h4("Please wait..."),
+                        align = "center")),
+        fluidRow(column(12, imageOutput("loading"),
+                        align = "center"))),
+      conditionalPanel(
+        condition = "!($('html').hasClass('shiny-busy'))",
+        uiOutput("download_button"),
         br(), br(),
         DT::dataTableOutput("table")
       )
