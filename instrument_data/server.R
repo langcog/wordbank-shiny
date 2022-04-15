@@ -1,24 +1,42 @@
+####################### FULL CHILD-BY-WORD DATA ######################
 library(shiny)
-#library(dplyr)
-#library(DT)
-#library(wordbankr)
-#mode <- "local"
-source(here("common.R"))
-# input <- list(language = "English (American)", form = "WS", age = c(18, 30))
+library(here)
 
+source(here("common.R"))
+
+# LOAD DATA
+
+start_language <- "English (American)"
+start_form <- "WS"
+
+instruments <- get_instruments(mode = mode, db_args = db_args)
+languages <- sort(unique(instruments$language))
+
+# ----------------------- MAIN SHINY SERVER  ----------------------- 
 function(input, output, session) {
 
   output$loaded <- reactive(0)
   outputOptions(output, "loaded", suspendWhenHidden = FALSE)
 
-  instruments <- get_instruments(mode = mode, db_args = db_args)
-  languages <- sort(unique(instruments$language))
+  # -------------------- SELECTORS FOR DATA
+  output$language_selector <- renderUI({
+    selectizeInput("language", label = h4("Language"),
+                   choices = languages, selected = start_language)
+  })
   
-  start_language <- "English (American)"
-  start_form <- "WS"
+  output$form_selector <- renderUI({
+    req(input$language)
+    
+    forms <- filter(instruments, 
+                    language == input$language) %>%
+      pull(form)
+    
+    selectizeInput("form", label = h4("Form"),
+                   choices = forms, selected = start_form)
+  })
 
+  # -------------------- GET DATA
   data <- eventReactive(input$get_data, {
-
     req(input$language, 
         input$form)
 
@@ -44,46 +62,24 @@ function(input, output, session) {
     options = list(orderClasses = TRUE, processing = TRUE, pageLength = 25)
   )
 
-  output$language_selector <- renderUI({
-    selectizeInput("language", label = h4("Language"),
-                   choices = languages, selected = start_language)
-  })
-
-  forms <- reactive({
-    req(input$language)
-    valid_form <- function(form) {
-      form %in% unique(filter(instruments,
-                              language == input$language)$form)
-    }
-    Filter(valid_form, list("Words & Sentences" = "WS",
-                            "Words & Gestures" = "WG",
-                            "Oxford CDI" = "Oxford CDI"))
-  })
-
-  output$form_selector <- renderUI({
-    selectizeInput("form", label = h4("Form"),
-                   choices = forms(), selected = start_form)
-  })
-
+  # -------------------- DOWNLOADS ETC 
   output$download_button <- renderUI({
     if (!is.null(data())) {
       downloadButton("download_data", "Download Data",
                      class = "btn-xs")
     }
   })
-
+  
   output$download_data <- downloadHandler(
     filename = function() "instrument_data.csv",
     content = function(file) {
       cat(nrow(data()))
       write.csv(data(), file, row.names = FALSE)
     })
-
+  
   output$loading <- renderImage(list(src = "../images/loading.gif",
                                      contentType = "image/gif",
                                      alt = "Loading"),
                                 deleteFile = FALSE)
-
   output$loaded <- reactive(1)
-
 }

@@ -23,17 +23,24 @@ shinyUI(fluidPage(
 
       conditionalPanel(
         condition = "output.loaded == 1",
+        
         uiOutput("language_selector"),
         uiOutput("form_selector"),
+        #checkboxInput("incl_health_conditions"),
         br(),
-        actionButton("get_data", "Get Data"),
-        p("Caution: can take a while")
+        actionButton("get_data", "Get Data!"),
+        p("Note that loading large datasets can take 30 seconds or more, please be patient."),
+        br(),
+        br()
       )),
 
     mainPanel(
       width = 9,
+      tags$style(type = "text/css",
+                 ".shiny-output-error { visibility: hidden; }",
+                 ".shiny-output-error:before { visibility: hidden; }"),
       conditionalPanel(
-        condition = "$('html').attr('class') == 'shiny-busy'",
+        condition="($('html').hasClass('shiny-busy'))",
         fluidRow(column(12, tags$h4("Please wait..."),
                         align = "center")),
         fluidRow(column(12, imageOutput("loading"),
