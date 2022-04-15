@@ -57,8 +57,16 @@ function(input, output, session) {
       filter(language == input$language, 
              form == input$form) 
     
-    age_min <- instrument$age_min
-    age_max <- instrument$age_max
+    # defense against selecting instrument with mismatched form
+    if (nrow(instrument) == 0) {
+      age_min = 12
+      age_max = 36
+      } else {
+        age_min <- instrument$age_min
+        age_max <- instrument$age_max
+      }
+
+    # print(age_min)
 
     sliderInput("age", label = h4("Age (Months)"),
                 min = age_min, max = age_max, step = 1,
