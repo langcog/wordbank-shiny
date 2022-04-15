@@ -26,7 +26,10 @@ shinyUI(fluidPage(
         uiOutput("form_selector"),
         uiOutput("measure_selector"),
         uiOutput("age_selector"),
-        actionButton("go", "Get Data!")
+        actionButton("go", "Get Data!"),
+        br(),
+        br(),
+        p("Note that loading large datasets can take 30 seconds or more, please be patient.")
       )
     ),
 
@@ -37,11 +40,7 @@ shinyUI(fluidPage(
                  ".shiny-output-error:before { visibility: hidden; }"),
       conditionalPanel(
         condition = "output.loaded == 1",
-        downloadButton("download_all", "Download all pages",
-                       class = "btn-default btn-xs"),
-        downloadButton("download_current", "Download current page",
-                       class = "btn-default btn-xs"),
-        downloadButton("download_selected", "Download selected rows",
+        downloadButton("download_all", "Download data as CSV",
                        class = "btn-default btn-xs"),
         br(), br(),
         DT::dataTableOutput("table")
