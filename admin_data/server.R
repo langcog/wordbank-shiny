@@ -93,7 +93,7 @@ function(input, output, session) {
       filter(age >= input$age[[1]], age <= input$age[[2]])
   })
 
-  output$table <- renderDataTable(data(), 
+  output$table <- shiny::renderDataTable(data(), 
                                   options = list(orderClasses = TRUE))
 
   # --------------------- DOWNLOAD

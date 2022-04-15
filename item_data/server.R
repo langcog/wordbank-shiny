@@ -95,7 +95,7 @@ function(input, output, session) {
       spread(age, prop)
   })
   
-  output$table <- renderDataTable(
+  output$table <- DT::renderDataTable(
     data(), server = TRUE, filter = "top", style = "bootstrap",
     rownames = FALSE, selection = "multiple",
     options = list(orderClasses = TRUE, processing = TRUE, pageLength = 25)
