@@ -47,7 +47,7 @@ shinyUI(fluidPage(
                         align = "center"))
       ),
       conditionalPanel(
-        condition = "$('html').attr('class') != 'shiny-busy'",
+        condition = "!($('html').hasClass('shiny-busy'))",
         uiOutput("download_button"),
         br(),
         DT::dataTableOutput(outputId = "table")
