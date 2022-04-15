@@ -1,3 +1,5 @@
+# ###################### ITEM-LEVEL SUMMARY DATA ######################
+
 library(shiny)
 library(shinythemes)
 
@@ -23,7 +25,8 @@ shinyUI(fluidPage(
         uiOutput("language_selector"),
         uiOutput("form_selector"),
         uiOutput("measure_selector"),
-        uiOutput("age_selector")
+        uiOutput("age_selector"),
+        actionButton("go", "Get Data!")
       )
     ),
 

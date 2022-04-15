@@ -3,18 +3,18 @@ library(shinythemes)
 library(shinyBS)
 library(jsonlite)
 library(markdown)
+library(here)
 
+pops <- read_json(path = here("item_trajectories","docs","popovers.json"))
 
-pops <- fromJSON("docs/popovers.json")
-
-shinyUI(fluidPage(
+fluidPage(
 
   theme = shinytheme("spacelab"),
 
   br(),
   bsCollapse(id = "doc", open = "title",
              bsCollapsePanel(title = h3("Item Trajectories"),
-                             includeMarkdown("docs/description.md"),
+                             includeMarkdown(here("item_trajectories","docs","description.md")),
                              value = "title",
                              style = "default")),
 
@@ -86,4 +86,4 @@ shinyUI(fluidPage(
            )
     )
   )
-))
+)

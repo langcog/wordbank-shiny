@@ -1,152 +1,193 @@
+# ###################### ITEM TRAJECTORIES ######################
+
 library(shiny)
-library(magrittr)
-library(tidyr)
-library(dplyr)
-library(purrr)
-library(ggplot2)
-library(directlabels)
-library(wordbankr)
-library(langcog)
-theme_set(theme_mikabr(base_size = 18))
-font <- theme_mikabr()$text$family
-Sys.setlocale(locale = "en_US.UTF-8")
-mode <- "local"
+library(here)
 
-# input <- list(language = "English (American)", form = "WG WS", measure = "produces",
-#               words = c("baa baa", "woof"))
+source(here("common.R"))
+source(here("item_trajectories","helper.R"))
 
-list_items_by_definition <- function(item_data) {
-  items <- item_data$item_id
-  names(items) <- ifelse(is.na(item_data$uni_lemma),
-                         item_data$definition,
-                         paste0(item_data$definition,"\n(", item_data$uni_lemma,")")
-                         )
-  return(items)
-}
 
-list_items_by_id <- function(item_data) {
-  items <- ifelse(is.na(item_data$uni_lemma),
-                  item_data$definition,
-                  paste0(item_data$definition,"\n(", item_data$uni_lemma,")")
-                  )
-  names(items) <- item_data$item_id
-  return(items)
-}
+# --------------------- STATE PRELIMINARIES ------------------
 
-trajectory_data_fun <- function(admins, fun_instrument, fun_measure,
-                                fun_words) {
+admins <- get_administration_data(mode = mode, db_args = db_args, 
+                                  filter_age = FALSE, 
+                                  include_demographic_info = TRUE) |>
+  gather(measure, vocab, comprehension, production) |>
+  mutate(identity = "All Data")
 
-  instrument_word_data <- function(inst_id) {
-    inst <- filter(fun_instrument, instrument_id == inst_id)
-    word_ids <- inst$words_by_definition[[1]][fun_words]
-    get_instrument_data(inst$language,
-                        inst$form,
-                        items = word_ids[!is.na(word_ids)],
-                        administrations = admins,
-                        mode = mode) %>%
-      mutate(instrument_id = inst_id)
-  }
+items <- get_item_data(mode = mode, db_args = db_args) |>
+  mutate(item_definition = iconv(item_definition, from = "utf8", to = "utf8")) # why?
 
-  if (!is.null(fun_words)) {
-    word_data <- map(fun_instrument$instrument_id, instrument_word_data) %>%
-      bind_rows() %>%
-      mutate(produces = value == "produces",
-             understands = value == "understands" | value == "produces") %>%
-      select(-value) %>%
-      gather(measure, value, produces, understands) %>%
-      filter(measure == fun_measure) %>%
-      filter(!is.na(age)) %>%
-      group_by(instrument_id, num_item_id, age) %>%
-      summarise(total = n(),
-                prop = sum(value, na.rm = TRUE) / total) %>%
-                #num_true = sum(value, na.rm = TRUE),
-                #num_false = n() - num_true) %>%
-      group_by(instrument_id) %>%
-      mutate(item_id = sprintf("item_%s", num_item_id)) %>%
-      rowwise() %>%
-      mutate(item = fun_instrument[fun_instrument$instrument_id == instrument_id,]$words_by_id[[1]][item_id],
-      type = "word") %>%
-      left_join(select(fun_instrument, instrument_id, form)) %>%
-      select(-instrument_id, -item_id)
-  } else {
-    word_data <- data.frame()
-  }
-
-  word_data
-}
-
-admins <- get_administration_data(mode = mode, original_ids = TRUE)
-
-items <- get_item_data(mode = mode) %>%
-  mutate(definition = iconv(definition, from = "utf8", to = "utf8"))
-
-instruments <- get_instruments(mode = mode)
+instruments <- get_instruments(mode = mode, db_args = db_args)
 languages <- sort(unique(instruments$language))
 
-instrument_tables <- instruments %>%
-  group_by(instrument_id) %>%
+instrument_tables <- instruments |>
+  group_by(instrument_id) |>
   do(words_by_definition = list_items_by_definition(
-    filter(items, language == .$language, form == .$form, type == "word")
+    filter(items, language == .$language, form == .$form, item_kind == "word")
   ),
   words_by_id = list_items_by_id(
-    filter(items, language == .$language, form == .$form, type == "word")
-  )) %>%
+    filter(items, language == .$language, form == .$form, item_kind == "word")
+  )) |>
   left_join(instruments)
-
-start_language <- "English (American)"
-start_form <- "WS"
-start_measure <- "produces"
 
 alerted <- FALSE
 
-shinyServer(function(input, output, session) {
+# ---------------------- BEGIN SHINY SERVER ------------------
+function(input, output, session) {
 
   output$loaded <- reactive(0)
   outputOptions(output, "loaded", suspendWhenHidden = FALSE)
-
-  input_language <- reactive({
-    if (is.null(input$language)) start_language else input$language
+  
+  output$language_selector <- renderUI({
+    selectInput("language", label = strong("Language"),
+                choices = languages, selected = start_language)
   })
-
-  input_form <- reactive ({
-    a <- if (is.null(input$form)) start_form else input$form
-    possible_forms <- unique(filter(instrument_tables,
-                                    language == input_language())$form)
-    if (a %in% possible_forms | (a == "WG WS" & all(c("WG","WS") %in% possible_forms)))
-      a else forms()[[1]]
+  
+  output$form_selector <- renderUI({
+    selectInput("form", label = strong("Form"),
+                choices = forms(), selected = start_form)
   })
+  
+  output$measure_selector <- renderUI({
+    selectInput("measure", label = strong("Measure"),
+                choices = measures(), selected = start_measure)
+  })
+# 
+#   input_language <- reactive({
+#     if (is.null(input$language)) start_language else input$language
+#   })
+
+  # input_form <- reactive ({r
+  #   a <- if (is.null(input$form)) start_form else input$form
+  #   possible_forms <- unique(filter(instrument_tables,
+  #                                   language == input$language())$form)
+  #   if (a %in% possible_forms | (a == "WG WS" & all(c("WG","WS") %in% possible_forms)))
+  #     a else forms()[[1]]
+  # })
+  # input_form <- reactive ({
+  #   a <- if (is.null(input$form)) start_form else input$form
+  #   possible_forms <- unique(filter(instrument_tables,
+  #                                   language == input_language())$form)
+  #   if (a %in% possible_forms | (a == "WG WS" & all(c("WG","WS") %in% possible_forms)))
+  #     a else forms()[[1]]
+  # })
 
   input_forms <- reactive(
 
-    if (input_language() != "English (British)") {
-      strsplit(input_form(), " ")[[1]]}
+    if (input$language() != "English (British)") {
+      strsplit(input$form, " ")[[1]]}
     else {
-      input_form()}
+      input$form}
   )
 
-  input_measure <- reactive({
-    if (is.null(input$measure)) start_measure else input$measure
-  })
+  # input_measure <- reactive({
+  #   if (is.null(input$measure)) start_measure else input$measure
+  # })
+# 
+#   input_cross_sectional <- reactive({
+#     'cross_sectional' %in% input$data_filter
+#   })
+# 
+#   input_norming <- reactive({
+#     'norming' %in% input$data_filter
+#   })
+# 
+#   input_words <- reactive({
+#     if (is.null(input$words)) word_options()[1] else input$words
+#   })
 
-  input_cross_sectional <- reactive({
-    'cross_sectional' %in% input$data_filter
-  })
+ 
 
-  input_norming <- reactive({
-    'norming' %in% input$data_filter
+  # ---------------------- UI ELEMENTS
+  
+  word_options <- reactive({
+    if (length(input_forms()) == 1) {
+      words <- names(filter(instrument_tables,
+                            language == input$language,
+                            form == input_forms())$words_by_definition[[1]])
+    } else {
+      words1 <- names(filter(instrument_tables,
+                             language == input$language,
+                             form == input_forms()[1])$words_by_definition[[1]])
+      words2 <- names(filter(instrument_tables,
+                             language == input$language,
+                             form == input_forms()[2])$words_by_definition[[1]])
+      words <- intersect(words1, words2)
+    }
   })
-
-  input_words <- reactive({
-    if (is.null(input$words)) word_options()[1] else input$words
+  
+  observe({
+    words <- word_options()
+    updateSelectInput(session, "words", choices = words,
+                      selected = if (length(words)) words[1] else "")
+    #    isolate({
+    #         select_words <- input_words()
+    #         select_words <- select_words[select_words %in% words]
+    #         updateSelectInput(session, "words", choices = words, selected = input_words())
+    #    })
   })
-
+  
+  forms <- reactive({
+    valid_form <- function(form) {
+      form %in% unique(filter(instrument_tables,
+                              language == input$language)$form)
+    }
+    form_opts <- Filter(valid_form,
+                        list("Words & Sentences" = "WS",
+                             "Words & Gestures" = "WG",
+                             "FormA" = "FormA",
+                             "FormBOne" = "FormBOne",
+                             "FormBTwo" = "FormBTwo",
+                             "FormC" = "FormC",
+                             "TEDS Twos" = "TEDS Twos",
+                             "TEDS Threes" = "TEDS Threes",
+                             "Toddler Checklist" = "TC",
+                             "Infant Checklist" = "IC",
+                             "Oxford CDI" = "Oxford CDI"))
+    if (all(c("WS", "WG") %in% form_opts)) {
+      form_opts$"Both" <- "WG WS"
+    }
+    form_opts
+  })
+  
+  measures <- reactive({
+    if (all(input %in% c("WG","FormA","IC","Oxford CDI"))) {
+      list("Produces" = "produces", "Understands" = "understands")
+    } else {
+      list("Produces" = "produces")
+    }
+  })
+  
+ 
+  
+  
+  output$data_filter <- renderUI({
+    
+    possible_filters =  c("cross-sectional only" = "cross_sectional",
+                          "normative sample" = "norming")
+    
+    available_filters <- Filter(
+      function(data_filter) !all(is.na(form_admins()[[data_filter]]) |
+                                   form_admins()[[data_filter]] == FALSE),
+      possible_filters
+    )
+    
+    
+    
+    checkboxGroupInput("data_filter", "Choose Data",
+                       choices = available_filters,
+                       selected = "cross_sectional")
+    
+  })
+  
   many_words <- observe({
     word_limit <- 9
     if (length(input_words()) >= word_limit & !alerted) {
       createAlert(session, "many_words", "alert",
                   content = HTML(sprintf("For a large number of words, consider using the %s app instead.",
-                              a(href = "http://wordbank.stanford.edu/analyses?name=item_data",
-                                "Item Data"))),
+                                         a(href = "http://wordbank.stanford.edu/analyses?name=item_data",
+                                           "Item Data"))),
                   style = "warning", dismiss = FALSE)
       alerted <<- TRUE
     }
@@ -155,32 +196,38 @@ shinyServer(function(input, output, session) {
       alerted <<- FALSE
     }
   })
-
+  
   instrument <- reactive({
-    filter(instrument_tables, language == input_language(),
-           form %in% input_forms())
+    filter(instrument_tables, language == input$language(),
+           form %in% input$forms)
   })
-
+  
+  # ---------------------- DATA LOADING
+  
   form_admins <- reactive({
-    form_specific_admins <- admins %>%
-      filter(language == input_language())
+    # req(input_language())
+    # req(input_forms())
+    
+    form_specific_admins <- admins |>
+      filter(language == input$language)
 
     if(length(input_forms()) == 1)
       form_specific_admins %<>% filter(form == input_forms())
 
     #Compute cross-sectional as first entry for a child in a source
-    first_longitudinals <- form_specific_admins %>%
-      filter(longitudinal) %>%
-      group_by(source_name, original_id) %>%
-      arrange(age) %>%
+    first_longitudinals <- form_specific_admins |>
+      group_by(dataset_name, child_id) |>
+      arrange(age) |>
       slice(1)
 
-    form_specific_admins %>%
-      mutate(cross_sectional = !longitudinal |
-               (longitudinal & (data_id %in% first_longitudinals$data_id)))
+    form_specific_admins |>
+      mutate(cross_sectional = data_id %in% first_longitudinals$data_id)
   })
 
   filtered_admins <- reactive({
+    # req(form_admins())
+    # req(input_cross_sectional())
+    # req(input_norming())
 
     filtered_admins <- form_admins()
 
@@ -195,7 +242,7 @@ shinyServer(function(input, output, session) {
 
   trajectory_data <- reactive({
     if (all(input_words() %in% word_options())) {
-      trajectory_data_fun(filtered_admins(), instrument(), input_measure(), input_words()) %>%
+      trajectory_data_fun(filtered_admins(), instrument(), input_measure(), input_words()) |>
         mutate(item = factor(item, levels = input_words()))
     } else {
       data.frame()
@@ -203,13 +250,14 @@ shinyServer(function(input, output, session) {
   })
 
   mean_data <- reactive({
-    trajectory_data() %>%
-      group_by(form, type, age) %>%
+    trajectory_data() |>
+      group_by(form, type, age) |>
       summarise(prop = mean(prop),
-                total = sum(total)) %>%
+                total = sum(total)) |>
       mutate(item = "mean")
   })
 
+  # ------------------------------ PLOTTING OUTPUT
   ylabel <- reactive({
     if (input_measure() == "understands") "Proportion of Children Understanding"
     else if (input_measure() == "produces") "Proportion of Children Producing"
@@ -260,111 +308,22 @@ shinyServer(function(input, output, session) {
       }
     }
   }
-
-  word_options <- reactive({
-    if (length(input_forms()) == 1) {
-      words <- names(filter(instrument_tables,
-                            language == input_language(),
-                            form == input_forms())$words_by_definition[[1]])
-    } else {
-      words1 <- names(filter(instrument_tables,
-                             language == input_language(),
-                             form == input_forms()[1])$words_by_definition[[1]])
-      words2 <- names(filter(instrument_tables,
-                             language == input_language(),
-                             form == input_forms()[2])$words_by_definition[[1]])
-      words <- intersect(words1, words2)
-    }
-  })
-
-  observe({
-    words <- word_options()
-   updateSelectInput(session, "words", choices = words,
-                     selected = if (length(words)) words[1] else "")
-#    isolate({
-#         select_words <- input_words()
-#         select_words <- select_words[select_words %in% words]
-#         updateSelectInput(session, "words", choices = words, selected = input_words())
-#    })
-  })
-
-  forms <- reactive({
-    valid_form <- function(form) {
-      form %in% unique(filter(instrument_tables,
-                              language == input_language())$form)
-    }
-    form_opts <- Filter(valid_form,
-                        list("Words & Sentences" = "WS",
-                             "Words & Gestures" = "WG",
-                             "FormA" = "FormA",
-                             "FormBOne" = "FormBOne",
-                             "FormBTwo" = "FormBTwo",
-                             "FormC" = "FormC",
-                             "TEDS Twos" = "TEDS Twos",
-                             "TEDS Threes" = "TEDS Threes",
-                             "Toddler Checklist" = "TC",
-                             "Infant Checklist" = "IC",
-                             "Oxford CDI" = "Oxford CDI"))
-    if (all(c("WS", "WG") %in% form_opts)) {
-      form_opts$"Both" <- "WG WS"
-    }
-    form_opts
-  })
-
-  measures <- reactive({
-    if (all(input_forms() %in% c("WG","FormA","IC","Oxford CDI"))) {
-      list("Produces" = "produces", "Understands" = "understands")
-    } else {
-      list("Produces" = "produces")
-    }
-  })
-
+  
   output$trajectory_plot <- renderPlot(trajectory_plot(), height = function() {
     session$clientData$output_trajectory_plot_width * 0.7
   })
-
-  output$language_selector <- renderUI({
-    selectInput("language", label = strong("Language"),
-                choices = languages, selected = input_language())
-  })
-
-  output$form_selector <- renderUI({
-    selectInput("form", label = strong("Form"),
-                choices = forms(), selected = input_form())
-  })
-
-  output$measure_selector <- renderUI({
-    selectInput("measure", label = strong("Measure"),
-                choices = measures(), selected = input_measure())
-  })
-
-  output$data_filter <- renderUI({
-
-    possible_filters =  c("cross-sectional only" = "cross_sectional",
-                          "normative sample" = "norming")
-
-    available_filters <- Filter(
-      function(data_filter) !all(is.na(form_admins()[[data_filter]]) |
-                                   form_admins()[[data_filter]] == FALSE),
-      possible_filters
-    )
-
-
-
-    checkboxGroupInput("data_filter", "Choose Data",
-                       choices = available_filters,
-                       selected = "cross_sectional")
-
-  })
+  
+  
+  # ------------------------ TABLE AND OTHER DATA DOWNLOAD
 
   table_data <- reactive({
     traj <- trajectory_data()
     if (nrow(traj) == 0) {
-      expand.grid(age = age_min():age_max(), form = input_forms()) %>%
+      expand.grid(age = age_min():age_max(), form = input_forms()) |>
         select(form, age)
     } else {
-      traj %>%
-        select(form, age, item, prop) %>%
+      traj |>
+        select(form, age, item, prop) |>
         spread(item, prop)
     }
   })
@@ -376,8 +335,8 @@ shinyServer(function(input, output, session) {
     filename = function() "item_trajectory_table.csv",
     content = function(file) {
       td <- table_data()
-      extra_cols <- data.frame(language = rep(input_language(), nrow(td)),
-                               measure = rep(input_measure(), nrow(td)))
+      extra_cols <- data.frame(language = rep(input$language, nrow(td)),
+                               measure = rep(input$measure, nrow(td)))
       write.csv(bind_cols(extra_cols, td), file, row.names = FALSE)
     })
 
@@ -391,4 +350,4 @@ shinyServer(function(input, output, session) {
 
   output$loaded <- reactive(1)
 
-})
+}

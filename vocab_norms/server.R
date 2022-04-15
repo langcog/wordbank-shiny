@@ -1,48 +1,24 @@
-library(shiny)
+# ###################### VOCABULARY NORMS ######################
+
 library(gamlss) # needs to go early because of mass dependency
-library(tidyverse)
-library(magrittr)
-library(rlang)
-library(lazyeval)
-library(wordbankr)
-library(langcog)
-library(purrr)
+library(shiny)
 library(here)
 
-select <- dplyr::select
-
+source(here("common.R"))
 source(here("vocab_norms","helper.R"))
-theme_set(theme_mikabr(base_size = 18))
-
-# constants
-mode <- "remote"
-possible_demo_fields <- list("None" = "identity",
-                             "Birth Order" = "birth_order",
-                             "Ethnicity" = "ethnicity",
-                             "Gender" = "sex",
-                             "Mother's Education" = "mom_ed")
-pt_color <- "#839496"
-
-start_language <- "English (American)"
-start_form <- "WS"
-start_measure <- "production"
-start_demo <- "identity"
-
 
 
 # --------------------- STATE PRELIMINARIES ------------------
 
-admins <- get_administration_data(mode = mode, original_ids = TRUE) |>
+admins <- get_administration_data(mode = mode, db_args = db_args, 
+                                  filter_age = FALSE, 
+                                  include_demographic_info = TRUE) |>
   gather(measure, vocab, comprehension, production) |>
   mutate(identity = "All Data")
 
-instruments <- get_instruments(mode)
+instruments <- get_instruments(mode = mode, 
+                               db_args = db_args)
 languages <- sort(unique(instruments$language))
-
-
-
-# input <- list(language = "English (American)", form = "WS", measure = "production",
-#               quantiles = "Standard", demo = "sex")
 
 alerted <- FALSE
 
@@ -150,21 +126,11 @@ function(input, output, session) {
     req(input$measure)
     
     print("form_admins")
-    form_specific_admins <- admins |>
+    
+    admins |>
       filter(language == input$language,
              form == input$form,
              measure == input$measure)
-    
-    #Compute cross-sectional as first entry for a child in a source
-    first_longitudinals <- form_specific_admins |>
-      filter(longitudinal) |>
-      group_by(source_name, original_id) |>
-      arrange(age) |>
-      slice(1)
-    
-    form_specific_admins |>
-      mutate(cross_sectional = !longitudinal |
-               (longitudinal & (data_id %in% first_longitudinals$data_id)))
   })
   
   # FILTERS
@@ -173,8 +139,8 @@ function(input, output, session) {
   
   output$data_filter <- renderUI({
     # req(form_admins())
-    possible_filters =  c("cross-sectional only" = "cross_sectional",
-                          "normative sample" = "norming")
+    possible_filters =  c("no longitudinal data" = "cross_sectional",
+                          "normative sample" = "is_norming")
     
     # available_filters <- Filter(
     #   function(data_filter) !all(is.na(form_admins()[[data_filter]]) |
@@ -206,8 +172,16 @@ function(input, output, session) {
     # if('typically-developing' %in% input$data_filter)
     #   filtered_admins <- filter(filtered_admins, td == TRUE)
     
-    if('cross_sectional' %in% input$data_filter)
-      filtered_admins <- filter(filtered_admins, cross_sectional == TRUE)
+    if('cross_sectional' %in% input$data_filter) {
+      #Compute cross-sectional as first entry for a child in a source
+      first_longitudinals <- filtered_admins |>
+        group_by(dataset_name, child_id) |>
+        arrange(age) |>
+        slice(1) 
+      
+      filtered_admins <- filter(filtered_admins, 
+                                data_id %in% first_longitudinals$data_id)
+    }
     
     if('norming' %in% input$data_filter)
       filtered_admins <- filter(filtered_admins, norming == TRUE)
@@ -276,100 +250,6 @@ function(input, output, session) {
       select(-demo) |>
       rename(demo = clump)
   })
-  # 
-  # # CURVE FITTING
-  # fit_curves <- function(jitter_vocab = FALSE) {
-  #   req(input_quantiles())
-  #   req(data())
-  #   
-  #   models <- data() |>
-  #     group_by(demo)
-  #   
-  #   if (jitter_vocab){
-  #     models <- models |>
-  #       mutate(vocab = jitter(vocab))
-  #   }
-  #   
-  #   models <- models |>
-  #     do(model = gcrq(vocab ~ ps(age, monotone = 1, lambda = 1000),
-  #                     data = ., tau = input_quantiles()))
-  #   
-  #   get_model <- function(demo.value) {
-  #     return(filter(models, demo == value)$model[[1]])
-  #   }
-  #   
-  #   predicted_data <- data.frame()
-  #   values <- as.character(unique(data()$demo))
-  #   
-  #   for (value in values) {
-  #     ages <- data.frame(age = age_min():age_max())
-  #     value_predicted_data <- predictQR_fixed(get_model(value),
-  #                                             newdata = ages) |>
-  #       as.data.frame() |>
-  #       mutate(age = age_min():age_max()) |>
-  #       gather(quantile, predicted, -age) |>
-  #       mutate(demo = value,
-  #              quantile = factor(quantile))
-  #     predicted_data <- bind_rows(predicted_data, value_predicted_data)
-  #   }
-  #   
-  #   # TODO: when grcq fixes its bug, get rid of the if "." thing in curves
-  #   if (predicted_data$quantile[1] == ".") {
-  #     predicted_data$quantile <- factor(.5)
-  #   }
-  #   
-  #   clump_groups <- clumped_demo_groups(input$demo)$groups |>
-  #     rename(demo = clump)
-  #   
-  #   quantile_label <- sprintf(
-  #     "%.2f",
-  #     as.numeric(levels(predicted_data$quantile))[predicted_data$quantile]
-  #   )
-  #   
-  #   predicted_data |>
-  #     left_join(clump_groups) |>
-  #     mutate(demo = factor(demo, levels = clump_groups$demo),
-  #            demo_label = factor(demo_label, levels = clump_groups$demo_label),
-  #            quantile = sprintf(
-  #              "%.2f", as.numeric(levels(predicted_data$quantile))[quantile]
-  #            ))
-  #   
-  # }
-  # 
-  # # PLOT CURVES
-  # try_curves <- function() {
-  #   curve_output <- NULL
-  #   attempt <- 0
-  #   
-  #   while( is.null(curve_output) && attempt < 50 ) {
-  #     if ((attempt %% 2) == 0) {
-  #       try(
-  #         curve_output <- fit_curves()
-  #       )
-  #     } else if ((attempt %% 2) == 1){
-  #       try(
-  #         curve_output <- fit_curves(jitter_vocab = TRUE)
-  #       )
-  #     }
-  #     attempt <- attempt + 1
-  #   }
-  #   return(curve_output)
-  # }
-  # 
-  # curves <- reactive(tryCatch(try_curves(), error = function(e) NULL))
-  # 
-  # curves_bug <- observe({
-  #   if (is.null(curves()) & !alerted) {
-  #     createAlert(session, "curves_bug", "alert",
-  #                 content = "The current model does not fit well to this dataset.",
-  #                 style = "warning", dismiss = FALSE)
-  #     alerted <<- TRUE
-  #   }
-  #   if (!is.null(curves()) & alerted) {
-  #     closeAlert(session, "alert")
-  #     alerted <<- FALSE
-  #   }
-  # })
   
   # ------------------------------ PLOTTING OUTPUT
   
@@ -404,6 +284,11 @@ function(input, output, session) {
     req(data())
     req(input_quantiles())
     
+    print("curves")
+    print(data())
+    
+    print(data()$vocab)
+    
     # model
     max_vocab <- max(data()$vocab)
     mod_data <- data() |>
@@ -411,8 +296,11 @@ function(input, output, session) {
       mutate(vocab = vocab / max_vocab) |>
       filter(vocab > 0, vocab < 1) # transformation to 0-1 for beta model
     
+    print(mod_data)
+    
     mod_data <- mod_data[complete.cases(mod_data),]
     
+    print(mod_data)
     # get predictions - needs to be split because gamlss only predicts centiles 
     # for a single variable model
     mod_data |>
