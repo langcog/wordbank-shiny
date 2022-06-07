@@ -4,6 +4,11 @@ library(here)
 
 source(here("common.R"))
 
+# todo:
+# - make it more like item data: has a go button
+# - fix bug
+# - not default to "all" (perhaps remove "all" option)
+
 # LOAD DATA
 admins <- get_administration_data(mode = mode, db_args = db_args, 
                                   include_demographic_info = TRUE, 

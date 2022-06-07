@@ -1,14 +1,15 @@
 # ###################### ITEM TRAJECTORIES ######################
-
+# library(profvis)
 library(shiny)
 library(here)
+library(directlabels)
 
 source(here("common.R"))
 source(here("item_trajectories","helper.R"))
 
 
 # --------------------- STATE PRELIMINARIES ------------------
-
+print("loading data")
 admins <- get_administration_data(mode = mode, db_args = db_args, 
                                   filter_age = FALSE, 
                                   include_demographic_info = TRUE, 
@@ -30,6 +31,7 @@ admins <- get_administration_data(mode = mode, db_args = db_args,
          first_administration = n == 1)
   
 
+
 items <- get_item_data(mode = mode, db_args = db_args) 
 # |>
 #   mutate(item_definition = iconv(item_definition, from = "utf8", to = "utf8")) # why?
@@ -46,6 +48,8 @@ instrument_tables <- items  |>
 
 alerted <- FALSE
 
+print("begin shiny app")
+
 # ---------------------- BEGIN SHINY SERVER ------------------
 function(input, output, session) {
 
@@ -55,12 +59,16 @@ function(input, output, session) {
   
   # --------------- UI ELEMENTS
   output$language_selector <- renderUI({
+    print("language_selector")
+    
     selectInput("language", label = strong("Language"),
                 choices = languages, selected = start_language)
   })
   
   forms <- reactive({
     req(input$language)
+    
+    print("forms")
     
     filter(instruments,
                     language == input$language) |>
@@ -72,6 +80,8 @@ function(input, output, session) {
   output$form_selector <- renderUI({
     req(forms())
     
+    print("form selector")
+    
     selectInput("form", label = strong("Form"),
                 multiple = TRUE,
                 choices = forms(), selected = start_form)
@@ -81,22 +91,30 @@ function(input, output, session) {
   # maybe then we don't need to do the admins stuff
   measures <- reactive({
     req(input$form)
+    req(input$language)
+    
+    print("measures")
     
     form_admins <- filter(admins, 
-           language == input$language,
-           form %in% input$form) 
+                          language == input$language,
+                          form %in% input$form) 
+    
+    print("done with filter")
     
     if (!all(is.na(form_admins$comprehension))) {
-      c("Understands","Produces") 
+      m <- c("understands","produces") 
     } else {
-      "Produces"
+      m <-  "produces"
     }
     
+    print("done with measures")
+    m
   })
   
   output$measure_selector <- renderUI({
     req(measures())
     
+    print("measure selector")
     selectInput("measure", label = strong("Measure"),
                 choices = measures(), selected = start_measure)
   })
@@ -121,6 +139,7 @@ function(input, output, session) {
   output$word_selector <- renderUI({
     req(word_options())
     
+    print("word selector")
     selectInput("words", label = strong("Words"),
                 choices = word_options(), multiple = TRUE)
   })
@@ -128,6 +147,7 @@ function(input, output, session) {
 
   # FIXME - NEED NEW FILTERS
   output$data_filter <- renderUI({
+    print("filters")
     
     possible_filters =  c("cross-sectional only" = "first_administration",
                           "normative sample only" = "is_norming", 
@@ -147,6 +167,10 @@ function(input, output, session) {
   })
   
   many_words <- observe({
+    req(input$words)
+    
+    print("checking whether there are too many words")
+    
     word_limit <- 9
     if (length(input$words) >= word_limit & !alerted) {
       createAlert(session, "many_words", "alert",
@@ -166,6 +190,8 @@ function(input, output, session) {
     req(input$language)
     req(input$form)
     
+    print("filtered instrument tables")
+    
     filter(instrument_tables, language == input$language,
            form %in% input$form)
   })
@@ -177,7 +203,7 @@ function(input, output, session) {
     req(input$form)
     # req(input$data_filter)
     
-    print("form specific admins")
+    print("filtered admins")
     
     form_specific_admins <- admins |>
       filter(language == input$language, 
@@ -196,19 +222,30 @@ function(input, output, session) {
     req(input$words)
     
     print("trajectory data")
+    # print(input$words)
+    # print(word_options())
+    # print(filtered_admins())
+    # print(filtered_instrument_tables())
     
     # in case you have changed instruments and your words no longer apply, don't crash
     if (all(input$words %in% word_options())) {
-      trajectory_data_fun(filtered_admins(), filtered_instrument_tables(), input$measure, input$words) |>
+      td <- trajectory_data_fun(filtered_admins(), filtered_instrument_tables(), input$measure, input$words) |>
         mutate(item = factor(item_definition, levels = input$words))
     } else {
-      data.frame()
+      td <- data.frame()
     }
+    print(td)
+    
+    td
   })
 
+  # broken
+  # removing form type
   mean_data <- reactive({
+    print("mean data")
+    
     trajectory_data() |>
-      group_by(form, type, age) |>
+      group_by(form, age) |>
       summarise(prop = mean(prop),
                 total = sum(total)) |>
       mutate(item = "mean")
@@ -223,6 +260,10 @@ function(input, output, session) {
   age_lims <- reactive({
     req(input$form)
     req(input$language)
+
+    print("age limits")
+    
+    
     filtered_instruments <- filter(instruments, 
            language == input$language,
            form %in% input$form) 
@@ -231,9 +272,8 @@ function(input, output, session) {
       max(filtered_instruments$age_max))
   })
   
-  age_max <- reactive(max(instrument()$age_max))
-
   trajectory_plot <- function() {
+    req(trajectory_data())
     
     print("trajectory plot")
     
@@ -253,27 +293,29 @@ function(input, output, session) {
       amin <- age_lims()[1]
       amax <- age_lims()[2]
       
+      # removed linetype = type from the smoother
       g <- ggplot(traj, aes(x = age, y = prop, colour = item, fill = item, label = item)) +
         # geom_smooth(aes(linetype = type, weight = total), method = "glm",
         #             method.args = list(family = "binomial")) +
-        geom_smooth(aes(linetype = type, weight = total), method = "loess",
+        geom_smooth(aes(weight = total), method = "loess",
                     se = FALSE) +
         geom_point(aes(shape = form)) +
-        scale_shape_manual(name = "", values = c(20, 1), guide = FALSE) +
-        scale_linetype_discrete(guide = FALSE) +
+        scale_shape_manual(name = "", values = c(20, 1), guide = "none") +
+        scale_linetype_discrete(guide = "none") +
         scale_x_continuous(name = "\nAge (months)",
                            breaks = amin:amax,
                            limits = c(amin, amax + 3)) +
         scale_y_continuous(name = sprintf("%s\n", ylabel()),
                            limits = c(-0.01, 1),
                            breaks = seq(0, 1, 0.25)) +
-        scale_colour_solarized(guide = FALSE) +
-        scale_fill_solarized(guide = FALSE) +
+        scale_colour_solarized(guide = "none") +
+        scale_fill_solarized(guide = "none") +
         geom_dl(method = list(dl.trans(x = x + 0.3), "last.qp", cex = 1,
                               fontfamily = font))
       if (input$mean) {
+        # removed linetype = type
         g +
-          geom_smooth(aes(linetype = type, weight = total), method = "loess",
+          geom_smooth(aes(weight = total), method = "loess",
                       se = FALSE, colour = "black", data = mean_data()) +
           geom_point(aes(shape = form), colour = "black", data = mean_data())
       } else {
@@ -290,9 +332,12 @@ function(input, output, session) {
   # ------------------------ TABLE AND OTHER DATA DOWNLOAD
 
   table_data <- reactive({
+    req(trajectory_data())
+    req(age_lims())
+        
     traj <- trajectory_data()
     if (nrow(traj) == 0) {
-      expand.grid(age = age_min():age_max(), form = input$form) |>
+      expand.grid(age = age_lims()[1]:age_lims()[1], form = input$form) |>
         select(form, age)
     } else {
       traj |>

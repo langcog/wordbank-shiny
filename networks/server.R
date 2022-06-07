@@ -1,6 +1,8 @@
+# ###################### NETWORKS ######################
+
 # TODO
 # - childes associations
-# - cross-linguisic using unilemmas
+# - cross-linguistic using unilemmas
 
 library(shiny)
 library(readr)

@@ -1,10 +1,11 @@
+# ###################### FULL DATA DOWNLOAD  ######################
 library(shiny)
-#library(dplyr)
-#library(DT)
-#library(wordbankr)
-#mode <- "local"
+library(here)
+
 source(here("common.R"))
-# input <- list(language = "English (American)", form = "WS", age = c(18, 30))
+
+# todo:
+# - form options are wrong
 
 function(input, output, session) {
 

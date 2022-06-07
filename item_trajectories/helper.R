@@ -1,4 +1,4 @@
-trajectory_data_fun <- function(admins, fun_instrument, fun_measure,
+trajectory_data_fun <- function(fun_admins, fun_instrument, fun_measure,
                                 fun_words) {
   
   # get the data from this instrument
@@ -9,7 +9,7 @@ trajectory_data_fun <- function(admins, fun_instrument, fun_measure,
     get_instrument_data(language = inst$language,
                         form = inst$form,
                         items = word_ids[!is.na(word_ids)],
-                        administration_info = admins,
+                        administration_info = fun_admins,
                         mode = mode, 
                         db_args = db_args) %>%
       mutate(instrument_id = inst_id)
