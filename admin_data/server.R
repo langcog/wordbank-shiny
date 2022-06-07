@@ -4,10 +4,12 @@ library(here)
 
 source(here("common.R"))
 
-# todo:
-# - make it more like item data: has a go button
-# - fix bug
-# - not default to "all" (perhaps remove "all" option)
+flatten_tibble <- function(tib) {
+  if (is.null(tib)) return(as.character(NA))
+  map(flatten(tib) |> transpose(),
+      \(ls) map2(names(ls), ls, \(n, l) paste(n, l, sep = ": ")) |> paste(collapse = ", ")) |>
+    paste(collapse = "; ")
+}
 
 # LOAD DATA
 admins <- get_administration_data(mode = mode, db_args = db_args, 
@@ -16,13 +18,13 @@ admins <- get_administration_data(mode = mode, db_args = db_args,
                                   include_language_exposure = TRUE, 
                                   include_health_conditions = TRUE) %>%
   mutate(monolingual = map_lgl(language_exposures, 
-                               function(language_exposures) {
-                                 is_null(language_exposures) || nrow(language_exposures)==1
-                               }), 
-         typically_developing = map_lgl(health_conditions, 
-                                        function(health_conditions) {
-                                          is_null(health_conditions)
-                                        }))
+                               \(le) is_null(le) || nrow(le) == 1),
+         typically_developing = map_lgl(health_conditions, \(hc) is_null(hc)),
+         language_exposures = map_chr(language_exposures, flatten_tibble),
+         health_conditions = map_chr(health_conditions, \(hc) paste(hc$health_condition_name, collapse = "; "))) |>
+  select(-dataset_origin_name, -form_type, -data_id, -date_of_test) |>
+  select(language, form, dataset_name, child_id, age,
+         comprehension, production, is_norming, everything())
 
 # ----------------------- MAIN SHINY SERVER  ----------------------- 
 function(input, output, session) {
@@ -33,6 +35,7 @@ function(input, output, session) {
   # -------------------- UI ELEMENTS
   output$language_selector <- renderUI({
     selectizeInput("language", label = "Language",
+                   # choices = sort(unique(admins$language)))
                    choices = c("All", sort(unique(admins$language))),
                    selected = "All")
   })
@@ -49,6 +52,7 @@ function(input, output, session) {
     }
     
     selectizeInput("form", label = "Form",
+                   # choices = language_forms)
                    choices = c("All", language_forms),
                    selected = "All")
   })
@@ -73,7 +77,7 @@ function(input, output, session) {
   
   
   # -------------------- FILTER DATA
-  data <- reactive({
+  filtered_data <- reactive({
     req(input$language)
     req(input$form)
     req(input$health_conditions)
@@ -94,17 +98,23 @@ function(input, output, session) {
       filter_data %<>% filter(monolingual)
     }
     
-    filter_data %>% 
-      filter(age >= input$age[[1]], age <= input$age[[2]])
+    filter_data %>% filter(age >= input$age[[1]], age <= input$age[[2]])
+
   })
 
-  output$table <- DT::renderDataTable(data(), 
-                                  options = list(orderClasses = TRUE))
+  output$table <- DT::renderDataTable(
+    filtered_data(), server = TRUE, style = "bootstrap", rownames = FALSE,
+    selection = "none",
+    options = list(orderClasses = TRUE, processing = TRUE, pageLength = 25)
+  )
+  
+  # output$table <- DT::renderDataTable(filtered_data(),
+  #                                     options = list(orderClasses = TRUE))
 
   # --------------------- DOWNLOAD
   output$download_data <- downloadHandler(
     filename = function() "administration_data.csv",
-    content = function(file) write.csv(data(), file, row.names = FALSE)
+    content = function(file) write.csv(filtered_data(), file, row.names = FALSE)
   )
 
   output$loaded <- reactive(1)
