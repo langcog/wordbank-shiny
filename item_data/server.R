@@ -102,11 +102,24 @@ function(input, output, session) {
   )
   
   # -------------------- DOWNLOADS ETC 
+  
+  output$download_button <- renderUI({
+    if (!is.null(data())) {
+      downloadButton("download_all", "Download Data",
+                     class = "btn-xs")
+    }
+  })
+
   output$download_all <- downloadHandler(
     "item_data.csv",
     content <- function(file) {
       write.csv(data(), file, row.names = FALSE)
     })
+  
+  output$loading <- renderImage(list(src = "../images/loading.gif",
+                                     contentType = "image/gif",
+                                     alt = "Loading"),
+                                deleteFile = FALSE)
 
   output$loaded <- reactive(1)
 }
