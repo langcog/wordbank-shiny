@@ -6,7 +6,7 @@ library(here)
 
 
 shinyUI(fluidPage(
-  theme = shinytheme("spacelab"),
+  theme = shinytheme("cosmo"),
 
   titlePanel("Full Child-by-Word Data"),
   br(),

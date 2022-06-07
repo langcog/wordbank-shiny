@@ -9,7 +9,7 @@ pops <- read_json(path = here("vocab_norms","docs","popovers.json"))
 
 fluidPage(
 
-  theme = shinytheme("spacelab"),
+  theme = shinytheme("cosmo"),
 
   br(),
   bsCollapse(id = "doc", open = "title",

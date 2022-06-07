@@ -7,8 +7,16 @@ library(langcog)
 library(purrr)
 
 select <- dplyr::select
-font <- theme_mikabr()$text$family
-theme_set(theme_mikabr(base_size = 18))
+# font <- theme_mikabr()$text$family
+# theme_set(theme_mikabr(base_size = 18))
+font <- "Source Sans Pro"
+theme_set(theme_bw(base_size = 18, base_family = font))
+theme_update(panel.grid = ggplot2::element_blank(),
+             strip.background = ggplot2::element_blank(),
+             legend.key = ggplot2::element_blank(),
+             panel.border = ggplot2::element_blank(),
+             axis.line = ggplot2::element_line(),
+             strip.text = ggplot2::element_text(face = "bold"))
 
 # constants
 mode <- "remote"
@@ -31,4 +39,3 @@ db_args <- list(host = "wordbank2-dev.canyiscnpddk.us-west-2.rds.amazonaws.com",
 
 
 Sys.setlocale(locale = "en_US.UTF-8")
-mode <- "remote"

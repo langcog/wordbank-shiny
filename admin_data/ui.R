@@ -4,7 +4,7 @@ library(shinythemes)
 
 fluidPage(
   
-  theme = shinytheme("spacelab"),
+  theme = shinytheme("cosmo"),
   
   titlePanel("By-Child Summary Data"),
   br(),
