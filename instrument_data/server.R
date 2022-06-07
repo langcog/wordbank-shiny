@@ -4,9 +4,6 @@ library(here)
 
 source(here("common.R"))
 
-# todo:
-# - form options are wrong
-
 # LOAD DATA
 
 start_language <- "English (American)"
@@ -43,25 +40,26 @@ function(input, output, session) {
     req(input$language, 
         input$form)
 
-    get_instrument_data(language = input$language, 
+    gid <- get_instrument_data(language = input$language, 
                         form = input$form,
                         item_info = TRUE,
                         administration_info = TRUE,
                         mode = mode, 
-                        db_args = db_args) %>% 
-      left_join(get_administration_data(language = input$language, 
-                                        form = input$form, 
-                                        include_demographic_info = TRUE,
-                                        mode = mode, 
-                                        db_args = db_args)) %>%
-      select(data_id, age, caregiver_education, sex, value, item_id, category,
-             item_definition) %>% # also had 'type'?
+                        db_args = db_args) %>%
+      # left_join(get_administration_data(language = input$language, 
+      #                                   form = input$form, 
+      #                                   include_demographic_info = TRUE,
+      #                                   mode = mode, 
+      #                                   db_args = db_args)) %>%
+      select(data_id, item_kind, category, item_id, item_definition,
+             english_gloss, uni_lemma, child_id, age, value) |>
+             # caregiver_education, sex) # include demographics?
       arrange(data_id)
   })
 
   output$table <- DT::renderDataTable(
     data(), server = TRUE, filter = "top", style = "bootstrap", 
-    rownames = FALSE, selection = "multiple",
+    rownames = FALSE, selection = "none",
     options = list(orderClasses = TRUE, processing = TRUE, pageLength = 25)
   )
 

@@ -29,9 +29,9 @@ shinyUI(fluidPage(
         #checkboxInput("incl_health_conditions"),
         br(),
         actionButton("get_data", "Get Data!"),
-        p("Note that loading large datasets can take 30 seconds or more, please be patient."),
         br(),
-        br()
+        br(),
+        p("Note that loading large datasets can take 30 seconds or more, please be patient.")
       )),
 
     mainPanel(
