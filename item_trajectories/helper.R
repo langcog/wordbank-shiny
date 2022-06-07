@@ -23,7 +23,8 @@ trajectory_data_fun <- function(fun_admins, fun_instrument, fun_measure,
       group_by(form, item_id, age) %>%
       summarise(total = n(),
                 prop = sum(value, na.rm = TRUE) / total) %>%
-      left_join(unnest(fun_instrument, cols = c(data)))
+      left_join(unnest(fun_instrument, cols = c(data))) %>%
+      ungroup()
     # %>%
     #   group_by(form) %>%
     #   rowwise() %>%

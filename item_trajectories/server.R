@@ -7,6 +7,12 @@ library(directlabels)
 source(here("common.R"))
 source(here("item_trajectories","helper.R"))
 
+# TODO:
+# fix color stability
+# update copy
+# mean over words should stop at age max
+# down plot button should only be shown when there's a plot
+# table should be limited to age min and age max
 
 # --------------------- STATE PRELIMINARIES ------------------
 print("loading data")
@@ -15,7 +21,7 @@ admins <- get_administration_data(mode = mode, db_args = db_args,
                                   include_demographic_info = TRUE, 
                                   include_birth_info = TRUE,
                                   include_language_exposure = TRUE, 
-                                  include_health_conditions = TRUE) %>%
+                                  include_health_conditions = TRUE) |>
   mutate(monolingual = map_lgl(language_exposures, 
                                function(language_exposures) {
                                  is_null(language_exposures) || nrow(language_exposures) == 1
@@ -28,13 +34,12 @@ admins <- get_administration_data(mode = mode, db_args = db_args,
   arrange(age) |>
   mutate(n = 1:n(), 
          longitudinal = n > 1,
-         first_administration = n == 1)
+         first_administration = n == 1) |>
+  ungroup(child_id)
   
 
 
 items <- get_item_data(mode = mode, db_args = db_args) 
-# |>
-#   mutate(item_definition = iconv(item_definition, from = "utf8", to = "utf8")) # why?
 
 instruments <- get_instruments(mode = mode, db_args = db_args)
 languages <- sort(unique(instruments$language))
@@ -48,8 +53,6 @@ instrument_tables <- items  |>
 
 alerted <- FALSE
 
-print("begin shiny app")
-
 # ---------------------- BEGIN SHINY SERVER ------------------
 function(input, output, session) {
 
@@ -59,19 +62,14 @@ function(input, output, session) {
   
   # --------------- UI ELEMENTS
   output$language_selector <- renderUI({
-    print("language_selector")
-    
     selectInput("language", label = strong("Language"),
                 choices = languages, selected = start_language)
   })
   
   forms <- reactive({
     req(input$language)
-    
-    print("forms")
-    
-    filter(instruments,
-                    language == input$language) |>
+    instruments |>
+      filter(language == input$language) |>
       pull(form) |>
       unique() 
   })
@@ -79,42 +77,29 @@ function(input, output, session) {
   
   output$form_selector <- renderUI({
     req(forms())
-    
-    print("form selector")
-    
     selectInput("form", label = strong("Form"),
                 multiple = TRUE,
                 choices = forms(), selected = start_form)
   })
   
+  form_admins <- reactive({
+    req(input$form)
+    req(input$language)
+    form_admins <- admins |>
+      filter(language == input$language, form %in% input$form)
+  })
+  
   # note that this should eventually rely on form type? 
   # maybe then we don't need to do the admins stuff
   measures <- reactive({
-    req(input$form)
-    req(input$language)
-    
-    print("measures")
-    
-    form_admins <- filter(admins, 
-                          language == input$language,
-                          form %in% input$form) 
-    
-    print("done with filter")
-    
-    if (!all(is.na(form_admins$comprehension))) {
-      m <- c("understands","produces") 
-    } else {
-      m <-  "produces"
-    }
-    
-    print("done with measures")
-    m
+    req(form_admins())
+    meas <- "produces"
+    if (!all(is.na(form_admins()$comprehension))) meas <- c("understands", meas) 
+    meas
   })
   
   output$measure_selector <- renderUI({
     req(measures())
-    
-    print("measure selector")
     selectInput("measure", label = strong("Measure"),
                 choices = measures(), selected = start_measure)
   })
@@ -123,46 +108,36 @@ function(input, output, session) {
   word_options <- reactive({
     req(input$language)
     req(input$form)
-    
-    print("word options") 
-    
-    filter(instrument_tables, 
-           language == input$language, 
-           form %in% input$form) %>%
-      unnest(cols = c(data)) %>%
-      group_by(item_definition) %>%
-      count() %>%
-      filter(n == length(input$form)) %>%
+
+    instrument_tables |>
+      filter(language == input$language, form %in% input$form) |>
+      unnest(cols = c(data)) |>
+      group_by(item_definition) |>
+      count() |>
+      filter(n == length(input$form)) |>
       pull(item_definition)
   })
 
   output$word_selector <- renderUI({
     req(word_options())
-    
-    print("word selector")
     selectInput("words", label = strong("Words"),
                 choices = word_options(), multiple = TRUE)
   })
     
-
-  # FIXME - NEED NEW FILTERS
   output$data_filter <- renderUI({
-    print("filters")
-    
+    req(form_admins())
+
     possible_filters =  c("cross-sectional only" = "first_administration",
                           "normative sample only" = "is_norming", 
                           "monolingual only" = "monolingual", 
                           "typically developing only" = "typically_developing")
     
-    # available_filters <- Filter(
-    #   function(data_filter) !all(is.na(form_admins()[[data_filter]]) |
-    #                                form_admins()[[data_filter]] == FALSE),
-    #   possible_filters
-    # )
+    available_filters <- possible_filters |>
+      keep(\(filt) !all(is.na(form_admins()[[filt]]) | !form_admins()[[filt]]))
     
-    checkboxGroupInput("data_filter", "Choose Data",
-                       choices = possible_filters,
-                       selected = NULL) #c("first_administration","monolingual","typically_developing"))
+    checkboxGroupInput("data_filter", "Choose Data", choices = possible_filters,
+                       selected = c("first_administration", "monolingual",
+                                    "typically_developing"))
     
   })
   
@@ -190,8 +165,6 @@ function(input, output, session) {
     req(input$language)
     req(input$form)
     
-    print("filtered instrument tables")
-    
     filter(instrument_tables, language == input$language,
            form %in% input$form)
   })
@@ -199,33 +172,18 @@ function(input, output, session) {
   # ---------------------- DATA LOADING
   
   filtered_admins <- reactive({
-    req(input$language)
-    req(input$form)
-    # req(input$data_filter)
+    req(form_admins())
     
-    print("filtered admins")
-    
-    form_specific_admins <- admins |>
-      filter(language == input$language, 
-             form %in% input$form)
-    # 
-    # form_specific_admins <- walk(input$data_filter, function(filter_condition) { 
-    #   filter_condition <- enquo(filter_condition)
-    #   form_specific_admins %<>% filter(!!filter_condition)
-    # })
-
+    reduce(input$data_filter, .init = form_admins(),
+           function(filtered_admins, filter_condition) {
+             filtered_admins |> filter(.data[[ filter_condition ]])
+           })
   })
-
+  
   trajectory_data <- reactive({
     req(filtered_admins()) 
     req(filtered_instrument_tables()) 
     req(input$words)
-    
-    print("trajectory data")
-    # print(input$words)
-    # print(word_options())
-    # print(filtered_admins())
-    # print(filtered_instrument_tables())
     
     # in case you have changed instruments and your words no longer apply, don't crash
     if (all(input$words %in% word_options())) {
@@ -293,6 +251,7 @@ function(input, output, session) {
       amin <- age_lims()[1]
       amax <- age_lims()[2]
       
+      traj <- filter(traj, age >= amin, age <= amax)
       # removed linetype = type from the smoother
       g <- ggplot(traj, aes(x = age, y = prop, colour = item, fill = item, label = item)) +
         # geom_smooth(aes(linetype = type, weight = total), method = "glm",
@@ -335,7 +294,7 @@ function(input, output, session) {
     req(trajectory_data())
     req(age_lims())
         
-    traj <- trajectory_data()
+    traj <- trajectory_data() |> select(-item_id)
     if (nrow(traj) == 0) {
       expand.grid(age = age_lims()[1]:age_lims()[1], form = input$form) |>
         select(form, age)
