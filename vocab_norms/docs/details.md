@@ -11,8 +11,9 @@ the norming samples for a particular instrument. In particular, users should be
 aware that the values provided by Wordbank for English and Spanish are based on
 different participants and are estimated following different computational
 procedures than the values published in the User’s Guide and Technical Manual
-(Fenson et al., 2007; Jackson-Maldonado et al., 2003) and applied in the [CDI
-Scoring program](mb-cdi.stanford.edu/scoringdb_p.htm) (Marchman, 2013).
+(Marchman et al., in press; Fenson et al., 2007; Jackson-Maldonado et al., 2003). 
+In particular, the newest clinical norms are weighted to reflect the demographics 
+of the US population; this functionality is not available on Wordbank.
 
 In general, we do not recommend that Wordbank-generated norming values be used
 for research or clinical purposes in which the goal is to evaluate children's

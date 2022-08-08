@@ -10,9 +10,7 @@ source(here("item_trajectories","helper.R"))
 # TODO:
 # fix color stability
 # update copy
-# mean over words should stop at age max
 # down plot button should only be shown when there's a plot
-# table should be limited to age min and age max
 
 # --------------------- STATE PRELIMINARIES ------------------
 print("loading data")
@@ -33,10 +31,9 @@ admins <- get_administration_data(mode = mode, db_args = db_args,
   group_by(child_id) |>
   arrange(age) |>
   mutate(n = 1:n(), 
-         longitudinal = n > 1,
+         longitudinal = n() > 1, # not used?
          first_administration = n == 1) |>
   ungroup(child_id)
-  
 
 
 items <- get_item_data(mode = mode, db_args = db_args) 
@@ -187,26 +184,14 @@ function(input, output, session) {
     
     # in case you have changed instruments and your words no longer apply, don't crash
     if (all(input$words %in% word_options())) {
-      td <- trajectory_data_fun(filtered_admins(), filtered_instrument_tables(), input$measure, input$words) |>
+      td <- trajectory_data_fun(filtered_admins(), filtered_instrument_tables(), 
+                                input$measure, input$words) |>
         mutate(item = factor(item_definition, levels = input$words))
     } else {
       td <- data.frame()
     }
-    print(td)
     
     td
-  })
-
-  # broken
-  # removing form type
-  mean_data <- reactive({
-    print("mean data")
-    
-    trajectory_data() |>
-      group_by(form, age) |>
-      summarise(prop = mean(prop),
-                total = sum(total)) |>
-      mutate(item = "mean")
   })
 
   # ------------------------------ PLOTTING OUTPUT
@@ -218,24 +203,30 @@ function(input, output, session) {
   age_lims <- reactive({
     req(input$form)
     req(input$language)
-
-    print("age limits")
     
-    
-    filtered_instruments <- filter(instruments, 
-           language == input$language,
-           form %in% input$form) 
+    filtered_instruments <- instruments |> 
+      filter(language == input$language,
+             form %in% input$form) 
     
     c(min(filtered_instruments$age_min), 
       max(filtered_instruments$age_max))
   })
   
+  # removing form type
+  mean_data <- reactive({
+    req(age_lims())
+    
+    trajectory_data() |>
+      group_by(form, age) |>
+      summarise(prop = mean(prop),
+                total = sum(total)) |>
+      mutate(item = "mean") |> 
+      filter(age >= age_lims()[1],
+             age <= age_lims()[2])
+  })
+  
   trajectory_plot <- function() {
     req(trajectory_data())
-    
-    print("trajectory plot")
-    
-    print(trajectory_data())
     
     traj <- trajectory_data()
     if (nrow(traj) == 0) {
@@ -300,6 +291,8 @@ function(input, output, session) {
         select(form, age)
     } else {
       traj |>
+        filter(age >= age_lims()[1],
+               age <= age_lims()[2]) |> 
         select(form, age, item, prop) |>
         spread(item, prop)
     }
