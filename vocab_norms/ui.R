@@ -1,15 +1,8 @@
-library(shiny)
-library(shinythemes)
-library(shinyBS)
-library(jsonlite)
-library(markdown)
-library(here)
-
-pops <- read_json(path = here("vocab_norms","docs","popovers.json"))
+pops <- jsonlite::read_json(path = here("vocab_norms","docs","popovers.json"))
 
 fluidPage(
 
-  theme = shinytheme("cosmo"),
+  theme = shiny_theme,
 
   br(),
   bsCollapse(id = "doc", open = "title",

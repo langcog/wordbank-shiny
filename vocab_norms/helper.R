@@ -45,12 +45,13 @@ clump_demo_groups <- function(groups, map, fun_demo, min_obs = 100) {
   if (all(groups$n >= min_obs) | nrow(groups) == 1) {
     if (fun_demo == "birth_order" & nrow(groups) > 1) {
       demos <- unique(groups$demo)
-      groups %<>% mutate(demo = c(as.character(demos[1:(length(demos) - 1)]),
-                                  paste0(demos[length(demos)], "+")))
+      groups <- groups %>%
+        mutate(demo = c(as.character(demos[1:(length(demos) - 1)]),
+                        paste0(demos[length(demos)], "+")))
       plus <- max(which(names(map) == map))
       map[plus:length(map)] <- paste0(map[plus], "+")
     }
-    groups %<>%
+    groups <- groups %>%
       filter(fun_demo == "identity" | n >= min_obs) %>%
       rename(clump = demo) %>%
       mutate(demo_label = sprintf("%s (n = %s)", clump, n))

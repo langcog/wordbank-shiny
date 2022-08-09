@@ -1,14 +1,4 @@
 # ###################### UNILEMMAS ######################
-
-library(shiny)
-library(readr)
-library(dplyr)
-library(ggplot2)
-library(langcog)
-library(feather)
-theme_set(theme_mikabr(base_size = 14))
-# font <- theme_mikabr()$text$family
-
 all_prop_data <- feather::read_feather("all_prop_data.feather")
 uni_lemmas <- sort(unique(all_prop_data$uni_lemma))
 start_lemma <- "dog"
@@ -65,8 +55,8 @@ shinyServer(function(input, output, session) {
       geom_label(aes(x = 8, y = 1, label = words), data = words_data,
                  label.padding = unit(0.15, "lines"),
                  vjust = "inward", hjust = "inward") +
-      scale_colour_solarized(guide = FALSE) +
-      scale_fill_solarized(guide = FALSE) +
+      langcog::scale_colour_solarized(guide = FALSE) +
+      langcog::scale_fill_solarized(guide = FALSE) +
       scale_y_continuous(name = "Proportion of children\n", limits = c(0, 1)) +
       scale_x_continuous(name = "\nAge (months)", limits = c(8, 18),
                          breaks = seq(8, 18, 2))

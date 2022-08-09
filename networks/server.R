@@ -3,19 +3,7 @@
 # TODO
 # - childes associations
 # - cross-linguistic using unilemmas
-
-library(shiny)
-library(readr)
-library(dplyr)
-library(tidyr)
-library(ggplot2)
-library(langcog)
-library(wordbankr)
-library(stringr)
-library(networkD3)
-
-theme_set(theme_mikabr(base_size = 14))
-font <- theme_mikabr()$text$family
+# library(networkD3)
 
 ######## DATA PROCESSING
 c_assocs <- read_csv(file = "assocs/c_assoc_mat.csv") 
@@ -195,16 +183,17 @@ shinyServer(function(input, output) {
   })
   
   ########## RENDER GRAPH
-  output$network <- renderForceNetwork({
-    forceNetwork(Links = assoc_edges(), Nodes = assoc_nodes(), Source = "in_node",
-                 Target = "out_node", Value = "width", NodeID = "label",
-                 linkWidth = JS("function(d) { return d.value; }"),
-                 Group = "group", opacity = .8, zoom = TRUE, opacityNoHover = .8,
-                 legend = input$group != "identity",
-                 linkColour = "#cccccc", fontSize = 12,
-                 colourScale = ifelse(length(unique(assoc_nodes()$group)) > 10, 
-                                      JS("d3.scale.category20()"),
-                                      JS("d3.scale.category10()")))
+  output$network <- networkD3::renderForceNetwork({
+    networkD3::forceNetwork(
+      Links = assoc_edges(), Nodes = assoc_nodes(), Source = "in_node",
+      Target = "out_node", Value = "width", NodeID = "label",
+      linkWidth = JS("function(d) { return d.value; }"),
+      Group = "group", opacity = .8, zoom = TRUE, opacityNoHover = .8,
+      legend = input$group != "identity",
+      linkColour = "#cccccc", fontSize = 12,
+      colourScale = ifelse(length(unique(assoc_nodes()$group)) > 10, 
+                           JS("d3.scale.category20()"),
+                           JS("d3.scale.category10()")))
   })
   
   # output$network <- renderVisNetwork({

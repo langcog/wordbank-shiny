@@ -1,9 +1,4 @@
 ####################### FULL CHILD-BY-WORD DATA ######################
-library(shiny)
-library(here)
-
-source(here("common.R"))
-
 # LOAD DATA
 
 start_language <- "English (American)"

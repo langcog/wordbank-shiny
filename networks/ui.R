@@ -1,12 +1,7 @@
-library(shiny)
-library(shinythemes)
-library(shinyBS)
-library(markdown)
-library(networkD3)
 shinyUI(fluidPage(
   
-  theme = shinytheme("spacelab"),
-  
+  theme = shiny_theme,
+
   br(),
   bsCollapse(id = "doc", open = "title",
              bsCollapsePanel(title = h3("Semantic Networks"),
@@ -58,7 +53,7 @@ shinyUI(fluidPage(
                  ".shiny-output-error:before { visibility: hidden; }"),
       conditionalPanel(
         condition = "output.loaded == 1",
-        forceNetworkOutput("network")
+        networkD3::forceNetworkOutput("network")
         # visNetworkOutput("network", height = "800px")
         
       )

@@ -1,12 +1,5 @@
-library(shiny)
-library(shinythemes)
-library(DT)
-library(shinyBS)
-library(here)
-
-
 shinyUI(fluidPage(
-  theme = shinytheme("cosmo"),
+  theme = shiny_theme,
 
   titlePanel("Full Child-by-Word Data"),
   br(),

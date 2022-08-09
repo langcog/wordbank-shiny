@@ -1,12 +1,6 @@
-library(shiny)
-library(shinythemes)
-library(shinyBS)
-library(markdown)
-
-
 shinyUI(fluidPage(
 
-  theme = shinytheme("spacelab"),
+  theme = shiny_theme,
 
   br(),
   bsCollapse(id = "doc", open = "title",

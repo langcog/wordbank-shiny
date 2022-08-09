@@ -1,9 +1,4 @@
 # ###################### CHILD-LEVEL SUMMARY DATA (ADMINS) ######################
-library(shiny)
-library(here)
-
-source(here("common.R"))
-
 flatten_tibble <- function(tib) {
   if (is.null(tib)) return(as.character(NA))
   map(flatten(tib) |> transpose(),
@@ -86,16 +81,16 @@ function(input, output, session) {
     
     filter_data <- admins
     if (input$language != "All") {
-      filter_data %<>% filter(language == input$language)
+      filter_data <- filter_data %>% filter(language == input$language)
     }
     if (input$form != "All") {
-      filter_data %<>% filter(form == input$form)
+      filter_data <- filter_data %>% filter(form == input$form)
     }
     if (input$health_conditions == "Typically-developing") {
-      filter_data %<>% filter(typically_developing)
+      filter_data <- filter_data %>% filter(typically_developing)
     }
     if (input$language_status == "Monolingual") {
-      filter_data %<>% filter(monolingual)
+      filter_data <- filter_data %>% filter(monolingual)
     }
     
     filter_data %>% filter(age >= input$age[[1]], age <= input$age[[2]])

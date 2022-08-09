@@ -1,10 +1,4 @@
 # ###################### ITEM TRAJECTORIES ######################
-# library(profvis)
-library(shiny)
-library(here)
-library(directlabels)
-
-source(here("common.R"))
 source(here("item_trajectories","helper.R"))
 
 # TODO:
@@ -258,10 +252,10 @@ function(input, output, session) {
         scale_y_continuous(name = sprintf("%s\n", ylabel()),
                            limits = c(-0.01, 1),
                            breaks = seq(0, 1, 0.25)) +
-        scale_colour_solarized(guide = "none") +
-        scale_fill_solarized(guide = "none") +
-        geom_dl(method = list(dl.trans(x = x + 0.3), "last.qp", cex = 1,
-                              fontfamily = font))
+        langcog::scale_colour_solarized(guide = "none") +
+        langcog::scale_fill_solarized(guide = "none") +
+        directlabels::geom_dl(method = list(directlabels::dl.trans(x = x + 0.3),
+                                            "last.qp", cex = 1, fontfamily = font))
       if (input$mean) {
         # removed linetype = type
         g +

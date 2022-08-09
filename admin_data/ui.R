@@ -1,11 +1,7 @@
 ###################### CHILD-LEVEL SUMMARY DATA (ADMINS) ######################
-library(shiny)
-library(shinythemes)
-
 fluidPage(
-  
-  theme = shinytheme("cosmo"),
-  
+  theme = shiny_theme,
+
   titlePanel("By-Child Summary Data"),
   br(),
   

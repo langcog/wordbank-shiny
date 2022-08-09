@@ -1,10 +1,6 @@
 # ###################### VOCABULARY NORMS ######################
 
 library(gamlss) # needs to go early because of mass dependency
-library(shiny)
-library(here)
-
-source(here("common.R"))
 source(here("vocab_norms","helper.R"))
 
 
@@ -336,16 +332,16 @@ function(input, output, session) {
     # base plot
     p <- ggplot(data(), aes(x = age, y = vocab)) + 
       geom_jitter(size = .6, color = pt_color, alpha = .7) +
-        scale_x_continuous(name = "\nAge (months)",
+        scale_x_continuous(name = "Age (months)",
                            breaks = seq(age_min(), age_max(), by = 2),
                            limits = c(age_min(), age_max())) +
-        scale_y_continuous(name = paste0(ylabel(), "\n"),
+        scale_y_continuous(name = ylabel(),#paste0(ylabel(), "\n"),
                            limits = c(0, max(data()$vocab))) 
     
     # most of the time - dealing with quantiles
     if (length(input_quantiles()) > 1) { 
       colour_values <- length(input_quantiles()) |>
-        solarized_palette() |>
+        langcog::solarized_palette() |>
         rev()
       
       p + geom_line(data = curves(),
@@ -355,7 +351,7 @@ function(input, output, session) {
         guides(color = guide_legend(reverse = TRUE))
       } else { # if it's the median, it's a special case
         colour_values <- length(unique(curves()$demo_label)) |>
-          solarized_palette()
+          langcog::solarized_palette()
         
         p + geom_line(data = curves(),
                       aes(x = x, y = predicted, col = demo_label), size = 1.5) + 
@@ -369,8 +365,10 @@ function(input, output, session) {
   )
   
   table_data <- reactive({
+    print(curves())
     curves() |>
-      select(age, quantile, predicted, demo) |>
+      select(age = x, quantile = percentile, predicted, demo) |>
+      distinct() |>
       spread(quantile, predicted) |>
       arrange(demo) |>
       rename_(.dots = setNames("demo", input$demo))

@@ -1,8 +1,4 @@
 # ###################### ITEM-LEVEL SUMMARY DATA ######################
-library(shiny)
-library(here)
-
-source(here("common.R"))
 source(here("item_trajectories","helper.R"))
 
 # choose form with limited data for testing

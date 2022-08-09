@@ -1,10 +1,6 @@
 # ###################### ITEM-LEVEL SUMMARY DATA ######################
-
-library(shiny)
-library(shinythemes)
-
 shinyUI(fluidPage(
-  theme = shinytheme("cosmo"),
+  theme = shiny_theme,
 
   titlePanel("By-Word Summary Data"),
   br(),
