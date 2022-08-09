@@ -9,7 +9,7 @@
 c_assocs <- read_csv(file = "assocs/c_assoc_mat.csv") 
 p_assocs <- read_csv(file = "assocs/p_assoc_mat.csv")
 all_assocs <- read_csv(file = "assocs/assoc_mat.csv")
-w2v_assocs<- read_csv(file= 'assocs/w2v_assocs.csv')
+w2v_assocs<- read_csv(file = 'assocs/w2v_assocs.csv')
 # pb_assocs<- read_csv(file = 'assocs/books_word2vec.csv')
 
 ws_aoas <- read_csv("aoas/eng_ws_production_aoas.csv") 
@@ -106,6 +106,10 @@ shinyServer(function(input, output) {
   
   ########## READ IN ASSOCIATIONS
   assoc_mat <- reactive({
+    req(input$source)
+    
+    print("assoc_mat")
+    
     if (input$source == "MFR") {
       assocs <- all_assocs
     } else if (input$source == "W2V") {
@@ -130,6 +134,9 @@ shinyServer(function(input, output) {
   
   ########## FILTER NODE DATA
   assoc_nodes <- reactive({
+    req(assoc_mat)
+    
+    print("assoc_nodes")
     # aoa_labels <- filter(aoa_data, aoa <= input$age)$label
     
     assoc_nodes <- data.frame(label = assoc_mat()$in_node, 
@@ -144,6 +151,10 @@ shinyServer(function(input, output) {
   
   ########## PARSE EDGE DATA
   assoc_edge_data <- reactive({
+    req(assoc_nodes)
+    
+    print("assoc_edge_data")
+    
     nodes <- assoc_nodes()
     
     # get the matrix in an id-based form
@@ -166,6 +177,9 @@ shinyServer(function(input, output) {
       
   ########## FILTER EDGES 
   assoc_edges <- reactive({
+    req(assoc_edge_data, input$cutoff, input$source)
+        
+    print("assoc_edges")
     req(input$weighted)
     
     scaling = ifelse(input$source == "W2V", 4, 1)
@@ -177,33 +191,31 @@ shinyServer(function(input, output) {
     if (input$weighted == "TRUE") {
       edges
     } else {
-      edges %>% select(-width) 
+      edges %>% mutate(width = 1)
     }
     
   })
   
   ########## RENDER GRAPH
+
   output$network <- networkD3::renderForceNetwork({
-    networkD3::forceNetwork(
-      Links = assoc_edges(), Nodes = assoc_nodes(), Source = "in_node",
-      Target = "out_node", Value = "width", NodeID = "label",
-      linkWidth = JS("function(d) { return d.value; }"),
-      Group = "group", opacity = .8, zoom = TRUE, opacityNoHover = .8,
-      legend = input$group != "identity",
-      linkColour = "#cccccc", fontSize = 12,
-      colourScale = ifelse(length(unique(assoc_nodes()$group)) > 10, 
-                           JS("d3.scale.category20()"),
-                           JS("d3.scale.category10()")))
+    req(assoc_edges, input$group)
+    
+    print("output")
+    networkD3::forceNetwork(Links = assoc_edges(), 
+                 Nodes = assoc_nodes(), 
+                 Source = "in_node",
+                 Target = "out_node", 
+                 Value = "width", 
+                 NodeID = "label",
+                 Group = "group", 
+                 opacity = .8, 
+                 zoom = TRUE, 
+                 opacityNoHover = .8,
+                 legend = input$group != "identity",
+                 linkColour = "#cccccc", 
+                 fontSize = 12)
   })
-  
-  # output$network <- renderVisNetwork({
-  #   visNetwork(assoc_nodes(), 
-  #              rename(assoc_edges(), from = in_node, to = out_node), 
-  #              width = "100%", height="100%") %>%
-  #     visPhysics(stabilization = TRUE) %>%
-  #    visEdges(smooth = FALSE, selfReferenceSize= FALSE)
-  #   
-  # })
   
   output$loaded <- reactive(1)
 })
