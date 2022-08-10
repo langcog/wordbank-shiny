@@ -1,5 +1,4 @@
 # ###################### ITEM-LEVEL SUMMARY DATA ######################
-source("helper.R")
 
 # choose form with limited data for testing
 start_language <- "American Sign Language"
