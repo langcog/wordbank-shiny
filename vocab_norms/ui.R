@@ -1,4 +1,4 @@
-pops <- jsonlite::read_json(path = here("vocab_norms","docs","popovers.json"))
+pops <- jsonlite::read_json("docs/popovers.json")
 
 fluidPage(
 
@@ -7,7 +7,7 @@ fluidPage(
   br(),
   bsCollapse(id = "doc", open = "title",
              bsCollapsePanel(title = h3("Vocabulary Norms"),
-                             includeMarkdown(here("vocab_norms","docs","description.md")),
+                             includeMarkdown("docs/description.md"),
                              value = "title",
                              style = "default")),
 

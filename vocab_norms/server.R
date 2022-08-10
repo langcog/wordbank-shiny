@@ -1,7 +1,7 @@
 # ###################### VOCABULARY NORMS ######################
 
 library(gamlss) # needs to go early because of mass dependency
-source(here("vocab_norms","helper.R"))
+source("helper.R")
 
 
 # --------------------- STATE PRELIMINARIES ------------------

@@ -1,5 +1,5 @@
 # ###################### ITEM TRAJECTORIES ######################
-source(here("item_trajectories","helper.R"))
+source("helper.R")
 
 # TODO:
 # fix color stability

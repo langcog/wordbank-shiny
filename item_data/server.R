@@ -1,5 +1,5 @@
 # ###################### ITEM-LEVEL SUMMARY DATA ######################
-source(here("item_trajectories","helper.R"))
+source("helper.R")
 
 # choose form with limited data for testing
 start_language <- "American Sign Language"
