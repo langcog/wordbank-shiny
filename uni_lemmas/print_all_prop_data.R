@@ -1,4 +1,3 @@
-
 library(tidyverse)
 library(langcog)
 library(wordbankr)
@@ -10,26 +9,37 @@ font <- "Open Sans"
 
 # Connect to the Wordbank database and pull out the raw data.
 # data_mode <- "remote"
+db_args <- list(host = "wordbank2-dev.canyiscnpddk.us-west-2.rds.amazonaws.com",
+                dbname = "wordbank",
+                user = "wordbank_reader",
+                password = "ICanOnlyRead@99")
+
 
 # all_prop_data <- feather::read_feather(here("shiny_apps/uni_lemmas/all_prop_data.feather"))
-uni_lemmas <- unique(wordbankr::get_crossling_items()$uni_lemma)
+uni_lemmas <- unique(wordbankr::get_crossling_items(db_args = db_args)$uni_lemma)
 start_lemma <- "dog"
 kid_min <- 3
 points_min <- 3
 
-all_prop_data <- get_instruments(mode = data_mode) %>%
-  split(list(.$language, .$form), drop = TRUE) %>%
+all_data <- wordbankr::get_instruments(db_args = db_args) %>%
+  split(list(.$language, .$form), drop = TRUE) |>
   map_df(function(x){
-    y <- get_instrument_data(language = x$language, form = x$form,
-                             administrations = TRUE, iteminfo = TRUE, mode = data_mode)
+    print(x)
+    y <- wordbankr::get_instrument_data(language = x$language, 
+                                        form = x$form,
+                                        administration_info = TRUE, 
+                                        item_info = TRUE, 
+                                        db_args = db_args)
     return(y)
-  })  %>%
-  filter(!is.na(uni_lemma)) %>%
-  mutate(value = ifelse(!is.na(value), value, "")) %>%
+  })  
+
+all_prop_data <- all_data |>
+  filter(!is.na(uni_lemma)) |>
+  mutate(value = ifelse(!is.na(value), value, "")) |>
   mutate(produces = ifelse(value == "produces", 1, 0),
-         understands = ifelse(value %in% c("understands", "produces"), 1, 0)) %>%
-  group_by(language, uni_lemma, age) %>%
-  summarise(words = definition %>% strsplit(", ") %>% unlist() %>% unique() %>%
+         understands = ifelse(value %in% c("understands", "produces"), 1, 0)) |>
+  group_by(language, uni_lemma, age) |>
+  summarise(words = item_definition %>% strsplit(", ") %>% unlist() %>% unique() %>%
               paste(collapse = ", "),
             produces = mean(produces),
             understands = mean(understands),
