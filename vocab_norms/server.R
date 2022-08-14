@@ -1,5 +1,9 @@
 # ###################### VOCABULARY NORMS ######################
 
+## TO FIX:
+# - status bar for gamlss
+# - form selection is broken somehow
+
 library(gamlss) # needs to go early because of mass dependency
 source("helper.R")
 
@@ -8,9 +12,27 @@ source("helper.R")
 
 admins <- get_administration_data(db_args = db_args, 
                                   filter_age = FALSE, 
-                                  include_demographic_info = TRUE) |>
-  gather(measure, vocab, comprehension, production) |>
-  mutate(identity = "All Data")
+                                  include_demographic_info = TRUE, 
+                                  include_birth_info = TRUE,
+                                  include_language_exposure = TRUE, 
+                                  include_health_conditions = TRUE) |>
+  mutate(identity = "All Data",
+         monolingual = map_lgl(language_exposures, 
+                               function(language_exposures) {
+                                 is_null(language_exposures) || nrow(language_exposures) == 1
+                               }), 
+         typically_developing = map_lgl(health_conditions, 
+                                        function(health_conditions) {
+                                          is_null(health_conditions)
+                                        }))  |>
+  group_by(dataset_name, language, form, child_id) |>
+  arrange(age) |>
+  mutate(n = 1:n(), 
+         first_administration = n == 1) |>
+  select(-n) |>
+  ungroup(dataset_name, child_id) |>
+  gather(measure, vocab, comprehension, production) 
+  
 
 instruments <- get_instruments(db_args = db_args)
 languages <- sort(unique(instruments$language))
@@ -89,7 +111,6 @@ function(input, output, session) {
                    choices = forms(), selected = start_form)
   })
   
-  
   # MEASURES
   # stopgap: hard code those forms that have a comprehension variable.
   # all others will be production-only for now.
@@ -154,6 +175,7 @@ function(input, output, session) {
   # conditional on whether the dataset has them available
   filtered_admins <- reactive({
     req(form_admins())
+    req(input$data_filter)
     
     print("filtered_admins")
     
@@ -166,9 +188,6 @@ function(input, output, session) {
   # DEMOGRAPHIC GROUPING
   # get the demographic groups 
   clumped_demo_groups <- function(fun_demo) {
-    req(filtered_admins())
-    
-    # print("demo grouping")
     demo_groups <- filtered_admins() |>
       rename(demo = {{fun_demo}}) |>
       filter(!is.na(demo)) |>
@@ -186,10 +205,13 @@ function(input, output, session) {
   output$demo_selector <- renderUI({
     req(filtered_admins())
     
+    print(filtered_admins())
+    
     available_demos <- Filter(
       function(demo) !all(is.na(filtered_admins()[[demo]])),
       possible_demo_fields
     )
+    
     demo_fields <- Filter(
       function(demo) demo == "identity" |
         nrow(clumped_demo_groups(demo)$groups) >= 2,
@@ -201,12 +223,11 @@ function(input, output, session) {
                 choices = demo_fields, selected = start_demo)
   })
   
-  
   # FINAL DATA FOR PLOTTING
   data <- reactive({
     req(input$demo)
     req(filtered_admins())
-    
+  
     print("data")
     groups_map <- clumped_demo_groups(input$demo)
     groups <- groups_map$groups
@@ -298,8 +319,10 @@ function(input, output, session) {
   v <- reactiveValues(plot = NULL)
   
   # MAKE PLOT
-  observeEvent(c(input$language, input$form, input$measure, input$demo), {
+  observeEvent(c(input$language, input$form, input$measure, input$demo, 
+                 input$data_filter), {
     req(input$demo)
+    print("basic plot")
     
     # make legend title
     if(input$demo == "identity") {

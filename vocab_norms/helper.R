@@ -1,3 +1,4 @@
+
 # DEMOGRAPHIC CLUMPING FUNCTIONS
 clump_step <- function(groups, map, fun_demo, min_obs = 100) {
   

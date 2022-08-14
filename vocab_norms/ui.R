@@ -44,7 +44,7 @@ fluidPage(
              wellPanel(
                selectInput("quantiles", label = strong("Quantiles"),
                            choices = list("Standard", "Deciles", "Quintiles",
-                                          "Quartiles", "Median"),
+                                          "Quartiles"),
                            selected = "Standard"),
                bsPopover("quantiles", title = NULL,
                          content = HTML(sprintf("<small>%s</small>", pops$quantile)),

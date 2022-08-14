@@ -19,6 +19,7 @@ shiny_theme <- shinythemes::shinytheme("cosmo")
 # constants
 possible_demo_fields <- list("None" = "identity",
                              "Birth Order" = "birth_order",
+                             "Race" = "race",
                              "Ethnicity" = "ethnicity",
                              "Gender" = "sex",
                              "Mother's Education" = "mom_ed")

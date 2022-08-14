@@ -22,7 +22,7 @@ admins <- get_administration_data(mode = mode, db_args = db_args,
                                         function(health_conditions) {
                                           is_null(health_conditions)
                                         }))  |>
-  group_by(child_id) |>
+  group_by(dataset_name, child_id) |>
   arrange(age) |>
   mutate(n = 1:n(), 
          longitudinal = n() > 1, # not used?
