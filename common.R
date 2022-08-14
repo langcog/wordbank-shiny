@@ -30,8 +30,8 @@ start_measure <- "production"
 start_demo <- "identity"
 
 # mode <- "remote"
-# db_args <- list(host = "wordbank2-dev.canyiscnpddk.us-west-2.rds.amazonaws.com",
-db_args <- list(host = "server.wordbank.stanford.edu",
+db_args <- list(host = "wordbank2-dev.canyiscnpddk.us-west-2.rds.amazonaws.com",
+# db_args <- list(host = "server.wordbank.stanford.edu",
                 dbname = "wordbank",
                 user = "wordbank_reader",
                 password = "ICanOnlyRead@99")

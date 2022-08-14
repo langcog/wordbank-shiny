@@ -35,20 +35,21 @@ fluidPage(
                bsPopover("measure_selector", title = NULL,
                          content = HTML(sprintf("<small>%s</small>", pops$measure)),
                          placement = "right"),
-               uiOutput("data_filter")),
-
-             wellPanel(
                uiOutput("demo_selector"),
                bsPopover("demo_selector", title = NULL,
                          content = HTML(sprintf("<small>%s</small>", pops$demo)),
                          placement = "right"),
+               uiOutput("data_filter"),
+             ),
+             wellPanel(
                selectInput("quantiles", label = strong("Quantiles"),
                            choices = list("Standard", "Deciles", "Quintiles",
                                           "Quartiles", "Median"),
                            selected = "Standard"),
                bsPopover("quantiles", title = NULL,
                          content = HTML(sprintf("<small>%s</small>", pops$quantile)),
-                         placement = "right"))
+                         placement = "right"), 
+               actionButton("go", "Add Model Fits"))
            )),
 
     column(9,
@@ -74,12 +75,12 @@ fluidPage(
                                      style = "default")
                         )
                       )),
-             tabPanel("Table",
+             tabPanel("Quantile Table",
                       br(),
+                      tableOutput("table"), 
+                      br(), br(), 
                       downloadButton("download_table", "Download Table",
-                                     class = "btn-default btn-xs"),
-                      br(), br(),
-                      tableOutput("table"))
+                                     class = "btn-default btn-xs"))
            )
     )
   )
