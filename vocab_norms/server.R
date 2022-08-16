@@ -10,8 +10,7 @@ source("helper.R")
 
 # --------------------- STATE PRELIMINARIES ------------------
 
-admins <- get_administration_data(db_args = db_args, 
-                                  filter_age = FALSE, 
+admins <- get_administration_data(filter_age = FALSE, 
                                   include_demographic_info = TRUE, 
                                   include_birth_info = TRUE,
                                   include_language_exposure = TRUE, 
@@ -34,7 +33,7 @@ admins <- get_administration_data(db_args = db_args,
   gather(measure, vocab, comprehension, production) 
 
 
-instruments <- get_instruments(db_args = db_args)
+instruments <- get_instruments()
 languages <- sort(unique(instruments$language))
 
 alerted <- FALSE

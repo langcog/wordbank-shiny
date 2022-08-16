@@ -5,7 +5,7 @@ start_language <- "American Sign Language"
 start_form <- "FormA"
 
 # LOAD DATA
-instruments <- get_instruments(mode = mode, db_args = db_args)
+instruments <- get_instruments()
 languages <- sort(unique(instruments$language))
 
 # ----------------------- MAIN SHINY SERVER  ----------------------- 

@@ -9,9 +9,7 @@ trajectory_data_fun <- function(fun_admins, fun_instrument, fun_measure,
     get_instrument_data(language = inst$language,
                         form = inst$form,
                         items = word_ids[!is.na(word_ids)],
-                        administration_info = fun_admins,
-                        mode = mode, 
-                        db_args = db_args) %>%
+                        administration_info = fun_admins) %>%
       mutate(instrument_id = inst_id)
   }
   
