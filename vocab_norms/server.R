@@ -32,7 +32,7 @@ admins <- get_administration_data(db_args = db_args,
   select(-n) |>
   ungroup(dataset_name, child_id) |>
   gather(measure, vocab, comprehension, production) 
-  
+
 
 instruments <- get_instruments(db_args = db_args)
 languages <- sort(unique(instruments$language))
@@ -82,33 +82,14 @@ function(input, output, session) {
   forms <- reactive({
     req(input$language)
     
-    form_opts <- unique(filter(instruments, language == input$language)$form)
-    
-    # can we do this functionally? this is simple though
-    # still has hard-coded cases to deal with naming the opaque WS and WG designators
-    forms <- list()
-    for (opt in form_opts) {
-      if (opt == "WS") {
-        forms[["Words & Sentences"]] = "WS"
-      } else if (opt == "WG") {
-        forms[["Words & Gestures"]] = "WG"
-      } else if (opt == "IC") {
-        forms[["Infant Checklist"]] = "IC"
-      } else if (opt == "TC") {
-        forms[["Toddler Checklist"]] = "TC"
-      } else {
-        forms[[opt]] <- opt
-      }
-    }
-    
-    return(forms)
+    form_names[form_names %in% unique(filter(instruments, language == input$language)$form)]
   })
   
   # FORM SELECTOR
   output$form_selector <- renderUI({
     req(forms())
     selectizeInput("form", label = strong("Form"),
-                   choices = forms(), selected = start_form)
+                   choices = forms(), selected = forms()[1])
   })
   
   # MEASURES
@@ -117,6 +98,8 @@ function(input, output, session) {
   # in the end, this will need a specification in the instruments table.
   measures <- reactive({
     req(input$form)
+    
+    
     if (input$form %in% c("WG", "FormA","IC","Oxford CDI")) {
       list("Produces" = "production", "Understands" = "comprehension")
     } else {
@@ -205,8 +188,6 @@ function(input, output, session) {
   output$demo_selector <- renderUI({
     req(filtered_admins())
     
-    print(filtered_admins())
-    
     available_demos <- Filter(
       function(demo) !all(is.na(filtered_admins()[[demo]])),
       possible_demo_fields
@@ -227,7 +208,7 @@ function(input, output, session) {
   data <- reactive({
     req(input$demo)
     req(filtered_admins())
-  
+    
     print("data")
     groups_map <- clumped_demo_groups(input$demo)
     groups <- groups_map$groups
@@ -273,17 +254,27 @@ function(input, output, session) {
     }
   })
   
+  # using waiter package to set up waiting screens
+  w <- Waiter$new(
+    id = "plot",
+    html = bs5_spinner(color = "danger"),
+    color = transparent(.5),
+  )
+  
   # CURVES
   # do the gamlss fits
-  curves <- eventReactive(input$go, {
+  curves <- reactive({
     req(data())
     req(input_quantiles())
     
     print("curves")
-    # model
     
+    w$show()
+    
+    # model
     max_vocab <- max(data()$vocab)
     mod_data <- data() |>
+      ungroup() |>
       select(vocab, age, demo) |>
       mutate(vocab = vocab / max_vocab) |>
       filter(vocab > 0, vocab < 1) # transformation to 0-1 for beta model
@@ -292,24 +283,26 @@ function(input, output, session) {
     
     # get predictions - needs to be split because gamlss only predicts centiles 
     # for a single variable model
-    mod_data |>
-      group_by(demo) |>
-      nest() |>
-      rowwise() |>
-      mutate(gam_mod = list(gamlss(vocab ~ pbm(age, lambda = 10000),
-                                   sigma.formula = ~ pbm(age, lambda = 10000),
-                                   family = BE, 
-                                   control = gamlss.control(c.crit = .1),
-                                   data = data)),
-             centiles = list(centiles.pred(gam_mod, cent = input_quantiles(),
-                                           xname = "age", xvalues = age_min():age_max(),
-                                           data = data))) |>
-      select(-gam_mod, -data) |>
-      unnest(cols = c(centiles)) |>
-      pivot_longer(-c(x, demo), names_to = "percentile", values_to = "predicted") |>
-      mutate(predicted = predicted * max_vocab) |> # uncorrect transformation
-      left_join(data() |>
-                  select(demo, demo_label)) # merge in labels
+    spsComps::shinyCatch(
+      mod_data |>
+        group_by(demo) |>
+        nest() |>
+        rowwise() |>
+        mutate(gam_mod = list(gamlss(vocab ~ pbm(age, lambda = 10000),
+                                     sigma.formula = ~ pbm(age, lambda = 10000),
+                                     family = BE, 
+                                     control = gamlss.control(c.crit = .1),
+                                     data = data)),
+               centiles = list(centiles.pred(gam_mod, cent = input_quantiles(),
+                                             xname = "age", xvalues = age_min():age_max(),
+                                             data = data))) |>
+        select(-gam_mod, -data) |>
+        unnest(cols = c(centiles)) |>
+        pivot_longer(-c(x, demo), names_to = "percentile", values_to = "predicted") |>
+        mutate(predicted = predicted * max_vocab) |> # uncorrect transformation
+        left_join(data() |>
+                    select(demo, demo_label), by = "demo")) # merge in labels
+      
   })
   
   # PLOT HOLDER
@@ -319,36 +312,41 @@ function(input, output, session) {
   v <- reactiveValues(plot = NULL)
   
   # MAKE PLOT
-  observeEvent(c(input$language, input$form, input$measure, input$demo, 
-                 input$data_filter), {
-    req(input$demo)
-    print("basic plot")
-    
-    # make legend title
-    if(input$demo == "identity") {
-      demo_label <- "" 
-    } else {
-      demo_label <- str_to_title(str_replace(input$demo, "_", " "))
-    }
-    
-    # colors
-    colour_values <- length(unique(data()$demo)) |>
-      langcog::solarized_palette()
-    
-    # assign plot
-    v$plot <- ggplot(data(), aes(x = age, y = vocab)) + 
-      geom_jitter(size = .6, color = pt_color, alpha = .7) +
-      scale_x_continuous(name = "Age (months)",
-                         breaks = seq(age_min(), age_max(), by = 2),
-                         limits = c(age_min(), age_max())) +
-      scale_y_continuous(name = ylabel(),#paste0(ylabel(), "\n"),
-                         limits = c(0, max(data()$vocab))) + 
-      geom_smooth(aes(col = demo_label), size = 1.5, 
-                  method = "gam", method.args = list(gamma = 10)) + 
-      scale_color_manual(name = demo_label, 
-                         values = colour_values) +
-      theme(legend.position = "bottom")
-  })
+  observeEvent(
+    c(input$language, input$form, input$measure, input$demo, input$data_filter), 
+    {
+      req(input$demo)
+      req(age_min())
+      req(age_max())
+      req(ylabel()) 
+      
+      print("basic plot")
+      
+      # make legend title
+      if(input$demo == "identity") {
+        demo_label <- "" 
+      } else {
+        demo_label <- str_to_title(str_replace(input$demo, "_", " "))
+      }
+      
+      # colors
+      colour_values <- length(unique(data()$demo)) |>
+        langcog::solarized_palette()
+      
+      # assign plot
+      v$plot <- ggplot(data(), aes(x = age, y = vocab)) + 
+        geom_jitter(size = .6, color = pt_color, alpha = .7) +
+        scale_x_continuous(name = "Age (months)",
+                           breaks = seq(age_min(), age_max(), by = 2),
+                           limits = c(age_min(), age_max())) +
+        scale_y_continuous(name = ylabel(),#paste0(ylabel(), "\n"),
+                           limits = c(0, max(data()$vocab))) + 
+        geom_smooth(aes(col = demo_label), size = 1.5, 
+                    method = "loess", span = 1, se = FALSE) + 
+        scale_color_manual(name = demo_label, 
+                           values = colour_values) +
+        theme(legend.position = "bottom")
+    })
   
   # UPDATE PLOT WITH CURVES WITH GO BUTTON
   observeEvent(input$go, {
@@ -357,10 +355,15 @@ function(input, output, session) {
     req(age_min())
     req(age_max())
     req(ylabel())
+    req(curves())
     
     colour_values <- length(input_quantiles()) |>
       langcog::solarized_palette() |>
       rev()
+    
+    on.exit({
+      w$hide()
+    })
     
     v$plot <- ggplot(data(), aes(x = age, y = vocab)) + 
       facet_wrap(~demo_label) +

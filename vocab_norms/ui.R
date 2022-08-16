@@ -1,7 +1,7 @@
 pops <- jsonlite::read_json("docs/popovers.json")
 
 fluidPage(
-
+  # autoWaiter(), 
   theme = shiny_theme,
 
   br(),
@@ -60,6 +60,7 @@ fluidPage(
              tabPanel("Plot",
                       br(),
                       conditionalPanel(
+                        useWaiter(), 
                         condition = "output.loaded == 1",
                         bsAlert("curves_bug"),
                         plotOutput("plot", width = "100%", height = "auto"),
