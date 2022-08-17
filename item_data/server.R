@@ -78,9 +78,7 @@ function(input, output, session) {
     get_instrument_data(language = input$language, 
                         form = input$form,
                         item_info = TRUE,
-                        administration_info = TRUE,
-                        mode = mode, 
-                        db_args = db_args) %>%
+                        administration_info = TRUE) %>%
       filter(item_kind == "word") %>%
       gather(measure, value, produces, understands) %>%
       filter(measure == input$measure,
