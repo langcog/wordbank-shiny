@@ -2,8 +2,9 @@ __Plot description__. This vocabulary norms plot shows all administrations of a
 particular CDI instrument within the instrument's valid age range. Dots show
 individual children, with age binned in whole months (and jittered to avoid
 overplotting). Lines on the plot indicate estimates of percentiles, fit using
-quantile regression with monotonic polynomial splines as the base function
-(Muggeo et al., 2013; `gcrq` function from the `quantregGrowth` package in `R`).
+quantile beta regression with polynomial splines using `gamlss`. Note that these 
+models are unweighted, meaning that percentile ranks will differ from population 
+weighted norms in the CDI manual (Marchman et al., 2023). 
 
 __Disclaimer__. Wordbank visualizations reflect the available data, dynamically
 combined from different sources that may not be identical to those included in

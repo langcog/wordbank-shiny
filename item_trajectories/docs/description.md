@@ -1,3 +1,2 @@
 This analysis allows exploration of growth curves for individual words on a CDI
-form. The experimental "both" option shows data from multiple forms for the same
-language.
+form. If you select more than one form (e.g., WG and WS), you can see item trajectories across forms for those words that appear on both.

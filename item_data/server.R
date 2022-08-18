@@ -5,7 +5,7 @@ start_language <- "American Sign Language"
 start_form <- "FormA"
 
 # LOAD DATA
-instruments <- get_instruments(mode = mode, db_args = db_args)
+instruments <- get_instruments()
 languages <- sort(unique(instruments$language))
 
 # ----------------------- MAIN SHINY SERVER  ----------------------- 
@@ -78,9 +78,7 @@ function(input, output, session) {
     get_instrument_data(language = input$language, 
                         form = input$form,
                         item_info = TRUE,
-                        administration_info = TRUE,
-                        mode = mode, 
-                        db_args = db_args) %>%
+                        administration_info = TRUE) %>%
       filter(item_kind == "word") %>%
       gather(measure, value, produces, understands) %>%
       filter(measure == input$measure,

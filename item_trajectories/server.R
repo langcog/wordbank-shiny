@@ -8,8 +8,7 @@ source("helper.R")
 
 # --------------------- STATE PRELIMINARIES ------------------
 print("loading data")
-admins <- get_administration_data(mode = mode, db_args = db_args, 
-                                  filter_age = FALSE, 
+admins <- get_administration_data(filter_age = FALSE, 
                                   include_demographic_info = TRUE, 
                                   include_birth_info = TRUE,
                                   include_language_exposure = TRUE, 
@@ -22,7 +21,7 @@ admins <- get_administration_data(mode = mode, db_args = db_args,
                                         function(health_conditions) {
                                           is_null(health_conditions)
                                         }))  |>
-  group_by(child_id) |>
+  group_by(dataset_name, child_id) |>
   arrange(age) |>
   mutate(n = 1:n(), 
          longitudinal = n() > 1, # not used?
@@ -30,9 +29,9 @@ admins <- get_administration_data(mode = mode, db_args = db_args,
   ungroup(child_id)
 
 
-items <- get_item_data(mode = mode, db_args = db_args) 
+items <- get_item_data() 
 
-instruments <- get_instruments(mode = mode, db_args = db_args)
+instruments <- get_instruments()
 languages <- sort(unique(instruments$language))
 
 

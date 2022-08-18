@@ -4,7 +4,7 @@
 start_language <- "English (American)"
 start_form <- "WS"
 
-instruments <- get_instruments(mode = mode, db_args = db_args)
+instruments <- get_instruments()
 languages <- sort(unique(instruments$language))
 
 # ----------------------- MAIN SHINY SERVER  ----------------------- 
@@ -38,9 +38,7 @@ function(input, output, session) {
     gid <- get_instrument_data(language = input$language, 
                         form = input$form,
                         item_info = TRUE,
-                        administration_info = TRUE,
-                        mode = mode, 
-                        db_args = db_args) %>%
+                        administration_info = TRUE) %>%
       # left_join(get_administration_data(language = input$language, 
       #                                   form = input$form, 
       #                                   include_demographic_info = TRUE,

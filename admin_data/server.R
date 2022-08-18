@@ -7,8 +7,7 @@ flatten_tibble <- function(tib) {
 }
 
 # LOAD DATA
-admins <- get_administration_data(mode = mode, db_args = db_args, 
-                                  include_demographic_info = TRUE, 
+admins <- get_administration_data(include_demographic_info = TRUE, 
                                   include_birth_info = TRUE,
                                   include_language_exposure = TRUE, 
                                   include_health_conditions = TRUE) %>%

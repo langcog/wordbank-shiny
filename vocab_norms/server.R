@@ -1,19 +1,39 @@
 # ###################### VOCABULARY NORMS ######################
 
+## TO FIX:
+# - status bar for gamlss
+# - form selection is broken somehow
+
 library(gamlss) # needs to go early because of mass dependency
 source("helper.R")
 
 
 # --------------------- STATE PRELIMINARIES ------------------
 
-admins <- get_administration_data(mode = mode, db_args = db_args, 
-                                  filter_age = FALSE, 
-                                  include_demographic_info = TRUE) |>
-  gather(measure, vocab, comprehension, production) |>
-  mutate(identity = "All Data")
+admins <- get_administration_data(filter_age = FALSE, 
+                                  include_demographic_info = TRUE, 
+                                  include_birth_info = TRUE,
+                                  include_language_exposure = TRUE, 
+                                  include_health_conditions = TRUE) |>
+  mutate(identity = "All Data",
+         monolingual = map_lgl(language_exposures, 
+                               function(language_exposures) {
+                                 is_null(language_exposures) || nrow(language_exposures) == 1
+                               }), 
+         typically_developing = map_lgl(health_conditions, 
+                                        function(health_conditions) {
+                                          is_null(health_conditions)
+                                        }))  |>
+  group_by(dataset_name, language, form, child_id) |>
+  arrange(age) |>
+  mutate(n = 1:n(), 
+         first_administration = n == 1) |>
+  select(-n) |>
+  ungroup(dataset_name, child_id) |>
+  gather(measure, vocab, comprehension, production) 
 
-instruments <- get_instruments(mode = mode, 
-                               db_args = db_args)
+
+instruments <- get_instruments()
 languages <- sort(unique(instruments$language))
 
 alerted <- FALSE
@@ -26,7 +46,7 @@ function(input, output, session) {
   outputOptions(output, "loaded", suspendWhenHidden = FALSE)
   
   # ---------------------- DATA LOADING
- 
+  
   # quantiles
   input_quantiles <- reactive({
     req(input$quantiles)
@@ -34,8 +54,7 @@ function(input, output, session) {
            Standard = c(10, 25, 50, 75, 90),
            Deciles = c(10, 20, 30, 40, 50, 60, 70, 80, 90),
            Quintiles = c(20, 40, 60, 80),
-           Quartiles = c(25, 50, 75),
-           Median = c(50))
+           Quartiles = c(25, 50, 75))
   })
   
   # instrument
@@ -53,43 +72,24 @@ function(input, output, session) {
   # LANGUAGE SELECTOR
   output$language_selector <- renderUI({
     selectizeInput("language", label = strong("Language"),
-                   choices = languages, selected = start_language)
+                   choices = c("", languages), 
+                   selected = "")
   })
-
- 
+  
+  
   # FORMS
   forms <- reactive({
     req(input$language)
     
-    form_opts <- unique(filter(instruments, language == input$language)$form)
-    
-    # can we do this functionally? this is simple though
-    # still has hard-coded cases to deal with naming the opaque WS and WG designators
-    forms <- list()
-    for (opt in form_opts) {
-      if (opt == "WS") {
-        forms[["Words & Sentences"]] = "WS"
-      } else if (opt == "WG") {
-        forms[["Words & Gestures"]] = "WG"
-      } else if (opt == "IC") {
-        forms[["Infant Checklist"]] = "IC"
-      } else if (opt == "TC") {
-        forms[["Toddler Checklist"]] = "TC"
-      } else {
-        forms[[opt]] <- opt
-      }
-    }
-    
-    return(forms)
+    form_names[form_names %in% unique(filter(instruments, language == input$language)$form)]
   })
   
   # FORM SELECTOR
   output$form_selector <- renderUI({
     req(forms())
     selectizeInput("form", label = strong("Form"),
-                   choices = forms(), selected = start_form)
+                   choices = forms(), selected = forms()[1])
   })
-  
   
   # MEASURES
   # stopgap: hard code those forms that have a comprehension variable.
@@ -97,6 +97,8 @@ function(input, output, session) {
   # in the end, this will need a specification in the instruments table.
   measures <- reactive({
     req(input$form)
+    
+    
     if (input$form %in% c("WG", "FormA","IC","Oxford CDI")) {
       list("Produces" = "production", "Understands" = "comprehension")
     } else {
@@ -111,7 +113,7 @@ function(input, output, session) {
                    choices = measures(), selected = start_measure)
   })
   
-
+  
   
   # ---------------------- DATA PROCESSING STEP 1: GET ADMINS
   # make demographic and filter selectors
@@ -130,23 +132,21 @@ function(input, output, session) {
   })
   
   # FILTERS
-  # due to circularity, this is no longer checking the data before rendering the 
-  # filters, but probably we should re-enable this some day?
-  
   output$data_filter <- renderUI({
-    # req(form_admins())
-    possible_filters =  c("no longitudinal data" = "cross_sectional",
-                          "normative sample" = "is_norming")
+    req(form_admins())
     
-    # available_filters <- Filter(
-    #   function(data_filter) !all(is.na(form_admins()[[data_filter]]) |
-    #                                form_admins()[[data_filter]] == FALSE),
-    #   possible_filters
-    # )
-    # 
-    checkboxGroupInput("data_filter", "Choose Data",
-                       choices = possible_filters,
-                       selected = "cross_sectional")
+    possible_filters =  c("cross-sectional only" = "first_administration",
+                          "normative sample only" = "is_norming", 
+                          "monolingual only" = "monolingual", 
+                          "typically developing only" = "typically_developing")
+    
+    available_filters <- possible_filters |>
+      keep(\(filt) !all(is.na(form_admins()[[filt]]) | !form_admins()[[filt]]))
+    
+    checkboxGroupInput("data_filter", "Choose Data", choices = possible_filters,
+                       selected = c("first_administration", "monolingual",
+                                    "typically_developing"))
+    
   })
   
   # ---------------------- DATA PROCESSING STEP 2: APPLY FILTER AND GET DEMOGRAPHICS
@@ -160,37 +160,16 @@ function(input, output, session) {
     req(input$data_filter)
     
     print("filtered_admins")
-    filtered_admins <- form_admins()
     
-    # if('monolingual' %in% input$data_filter)
-    #   filtered_admins <- filter(filtered_admins, monolingual == TRUE)
-    # 
-    # if('typically-developing' %in% input$data_filter)
-    #   filtered_admins <- filter(filtered_admins, td == TRUE)
-    
-    if('cross_sectional' %in% input$data_filter) {
-      #Compute cross-sectional as first entry for a child in a source
-      first_longitudinals <- filtered_admins |>
-        group_by(dataset_name, child_id) |>
-        arrange(age) |>
-        slice(1) 
-      
-      filtered_admins <- filter(filtered_admins, 
-                                data_id %in% first_longitudinals$data_id)
-    }
-    
-    if('norming' %in% input$data_filter)
-      filtered_admins <- filter(filtered_admins, norming == TRUE)
-    
-    filtered_admins
+    reduce(input$data_filter, .init = form_admins(),
+           function(filtered_admins, filter_condition) {
+             filtered_admins |> filter(.data[[ filter_condition ]])
+           })
   })
   
   # DEMOGRAPHIC GROUPING
   # get the demographic groups 
   clumped_demo_groups <- function(fun_demo) {
-    req(filtered_admins())
-    
-    # print("demo grouping")
     demo_groups <- filtered_admins() |>
       rename(demo = {{fun_demo}}) |>
       filter(!is.na(demo)) |>
@@ -212,6 +191,7 @@ function(input, output, session) {
       function(demo) !all(is.na(filtered_admins()[[demo]])),
       possible_demo_fields
     )
+    
     demo_fields <- Filter(
       function(demo) demo == "identity" |
         nrow(clumped_demo_groups(demo)$groups) >= 2,
@@ -222,7 +202,6 @@ function(input, output, session) {
     selectInput("demo", label = strong("Split Variable"),
                 choices = demo_fields, selected = start_demo)
   })
-  
   
   # FINAL DATA FOR PLOTTING
   data <- reactive({
@@ -274,6 +253,13 @@ function(input, output, session) {
     }
   })
   
+  # using waiter package to set up waiting screens
+  w <- Waiter$new(
+    id = "plot",
+    html = bs5_spinner(color = "danger"),
+    color = transparent(.5),
+  )
+  
   # CURVES
   # do the gamlss fits
   curves <- reactive({
@@ -281,91 +267,125 @@ function(input, output, session) {
     req(input_quantiles())
     
     print("curves")
-    print(data())
     
-    print(data()$vocab)
+    w$show()
     
     # model
     max_vocab <- max(data()$vocab)
     mod_data <- data() |>
+      ungroup() |>
       select(vocab, age, demo) |>
       mutate(vocab = vocab / max_vocab) |>
       filter(vocab > 0, vocab < 1) # transformation to 0-1 for beta model
     
-    print(mod_data)
-    
     mod_data <- mod_data[complete.cases(mod_data),]
     
-    print(mod_data)
     # get predictions - needs to be split because gamlss only predicts centiles 
     # for a single variable model
-    mod_data |>
-      group_by(demo) |>
-      nest() |>
-      rowwise() |>
-      mutate(gam_mod = list(gamlss(vocab ~ pbm(age, lambda = 10000),
-                                   sigma.formula = ~ pbm(age, lambda = 10000),
-                                   family = BE, 
-                                   control = gamlss.control(c.crit = .1),
-                                   data = data)),
-             centiles = list(centiles.pred(gam_mod, cent = input_quantiles(),
-                                           xname = "age", xvalues = age_min():age_max(),
-                                           data = data))) |>
-      select(-gam_mod, -data) |>
-      unnest(cols = c(centiles)) |>
-      pivot_longer(-c(x, demo), names_to = "percentile", values_to = "predicted") |>
-      mutate(predicted = predicted * max_vocab) |> # uncorrect transformation
-      left_join(data() |>
-                  select(demo, demo_label)) # merge in labels
+    spsComps::shinyCatch(
+      mod_data |>
+        group_by(demo) |>
+        nest() |>
+        rowwise() |>
+        mutate(gam_mod = list(gamlss(vocab ~ pbm(age, lambda = 10000),
+                                     sigma.formula = ~ pbm(age, lambda = 10000),
+                                     family = BE, 
+                                     control = gamlss.control(c.crit = .1),
+                                     data = data)),
+               centiles = list(centiles.pred(gam_mod, cent = input_quantiles(),
+                                             xname = "age", xvalues = age_min():age_max(),
+                                             data = data))) |>
+        select(-gam_mod, -data) |>
+        unnest(cols = c(centiles)) |>
+        pivot_longer(-c(x, demo), names_to = "percentile", values_to = "predicted") |>
+        mutate(predicted = predicted * max_vocab) |> # uncorrect transformation
+        left_join(data() |>
+                    select(demo, demo_label), by = "demo")) # merge in labels
+      
   })
   
+  # PLOT HOLDER
+  # the way the plot works is it sits in a reactive value container
+  # it is modified whenever language, form, measure, or demographic is changed
+  # but it also can be over-ridden by the "fit models" button
+  v <- reactiveValues(plot = NULL)
   
   # MAKE PLOT
-  plot <- reactive({
-    req(data())
-    req(curves())
-    req(input_quantiles())
-    req(age_min())
-    req(age_max())
-    req(ylabel())
-    
-    # base plot
-    p <- ggplot(data(), aes(x = age, y = vocab)) + 
-      geom_jitter(size = .6, color = pt_color, alpha = .7) +
+  observeEvent(
+    c(input$language, input$form, input$measure, input$demo, input$data_filter), 
+    {
+      req(input$demo)
+      req(age_min())
+      req(age_max())
+      req(ylabel()) 
+      
+      print("basic plot")
+      
+      # make legend title
+      if(input$demo == "identity") {
+        demo_label <- "" 
+      } else {
+        demo_label <- str_to_title(str_replace(input$demo, "_", " "))
+      }
+      
+      # colors
+      colour_values <- length(unique(data()$demo)) |>
+        langcog::solarized_palette()
+      
+      # assign plot
+      v$plot <- ggplot(data(), aes(x = age, y = vocab)) + 
+        geom_jitter(size = .6, color = pt_color, alpha = .7) +
         scale_x_continuous(name = "Age (months)",
                            breaks = seq(age_min(), age_max(), by = 2),
                            limits = c(age_min(), age_max())) +
         scale_y_continuous(name = ylabel(),#paste0(ylabel(), "\n"),
-                           limits = c(0, max(data()$vocab))) 
+                           limits = c(0, max(data()$vocab))) + 
+        geom_smooth(aes(col = demo_label), size = 1.5, 
+                    method = "loess", span = 1, se = FALSE) + 
+        scale_color_manual(name = demo_label, 
+                           values = colour_values) +
+        theme(legend.position = "bottom")
+    })
+  
+  # UPDATE PLOT WITH CURVES WITH GO BUTTON
+  observeEvent(input$go, {
+    req(data())
+    req(input_quantiles())
+    req(age_min())
+    req(age_max())
+    req(ylabel())
+    req(curves())
     
-    # most of the time - dealing with quantiles
-    if (length(input_quantiles()) > 1) { 
-      colour_values <- length(input_quantiles()) |>
-        langcog::solarized_palette() |>
-        rev()
-      
-      p + geom_line(data = curves(),
-                    aes(x = x, y = predicted, col = percentile), size = 1.5) + 
-        facet_wrap(~demo_label) + 
-        scale_color_manual(name = "Quantile", values = colour_values) +
-        guides(color = guide_legend(reverse = TRUE))
-      } else { # if it's the median, it's a special case
-        colour_values <- length(unique(curves()$demo_label)) |>
-          langcog::solarized_palette()
-        
-        p + geom_line(data = curves(),
-                      aes(x = x, y = predicted, col = demo_label), size = 1.5) + 
-          scale_color_manual(name = input$demo, values = colour_values) 
-      }
+    colour_values <- length(input_quantiles()) |>
+      langcog::solarized_palette() |>
+      rev()
+    
+    on.exit({
+      w$hide()
+    })
+    
+    v$plot <- ggplot(data(), aes(x = age, y = vocab)) + 
+      facet_wrap(~demo_label) +
+      geom_jitter(size = .6, color = pt_color, alpha = .7) +
+      scale_x_continuous(name = "Age (months)",
+                         breaks = seq(age_min(), age_max(), by = 2),
+                         limits = c(age_min(), age_max())) +
+      scale_y_continuous(name = ylabel(),#paste0(ylabel(), "\n"),
+                         limits = c(0, max(data()$vocab))) + 
+      geom_line(data = curves(),
+                aes(x = x, y = predicted, col = percentile), size = 1.5) +
+      facet_wrap(~demo_label) +
+      scale_color_manual(name = "Quantile", values = colour_values) +
+      guides(color = guide_legend(reverse = TRUE))
   })
   
   height_fun <- function() session$clientData$output_plot_width * 0.7
-  output$plot <- renderPlot(
-    plot(), height = height_fun
-  )
   
-  table_data <- reactive({
-    print(curves())
+  output$plot <- renderPlot(v$plot, height = height_fun)
+  
+  
+  table_data <- eventReactive(input$go, {
+    # print(curves())
     curves() |>
       select(age = x, quantile = percentile, predicted, demo) |>
       distinct() |>
@@ -376,6 +396,7 @@ function(input, output, session) {
   
   output$table <- renderTable(table_data(), include.rownames = FALSE,
                               digits = 1)
+  
   
   # --------------------- DOWNLOADING HANDLERS ETC
   
