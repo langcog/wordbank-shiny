@@ -4,30 +4,31 @@ source("helper.R")
 # TODO:
 # fix color stability
 # update copy
-# down plot button should only be shown when there's a plot
 
 # --------------------- STATE PRELIMINARIES ------------------
 print("loading data")
-admins <- get_administration_data(filter_age = FALSE, 
-                                  include_demographic_info = TRUE, 
+admins <- get_administration_data(filter_age = FALSE,
+                                  include_demographic_info = TRUE,
                                   include_birth_info = TRUE,
-                                  include_language_exposure = TRUE, 
+                                  include_language_exposure = TRUE,
                                   include_health_conditions = TRUE) |>
-  mutate(monolingual = map_lgl(language_exposures, 
+  mutate(monolingual = map_lgl(language_exposures,
                                function(language_exposures) {
                                  is_null(language_exposures) || nrow(language_exposures) == 1
-                               }), 
-         typically_developing = map_lgl(health_conditions, 
+                               }),
+         typically_developing = map_lgl(health_conditions,
                                         function(health_conditions) {
                                           is_null(health_conditions)
-                                        }))  |>
+                                        })) |>
   group_by(dataset_name, child_id) |>
   arrange(age) |>
-  mutate(n = 1:n(), 
+  mutate(n = 1:n(),
          longitudinal = n() > 1, # not used?
          first_administration = n == 1) |>
   ungroup(child_id)
 
+# saveRDS(admins, "admins.rds")
+# admins <- readRDS("admins.rds")
 
 items <- get_item_data() 
 
@@ -64,7 +65,6 @@ function(input, output, session) {
       unique() 
   })
   
-  
   output$form_selector <- renderUI({
     req(forms())
     selectInput("form", label = strong("Form"),
@@ -93,7 +93,6 @@ function(input, output, session) {
     selectInput("measure", label = strong("Measure"),
                 choices = measures(), selected = start_measure)
   })
-  
   
   word_options <- reactive({
     req(input$language)
@@ -125,7 +124,7 @@ function(input, output, session) {
     available_filters <- possible_filters |>
       keep(\(filt) !all(is.na(form_admins()[[filt]]) | !form_admins()[[filt]]))
     
-    checkboxGroupInput("data_filter", "Choose Data", choices = possible_filters,
+    checkboxGroupInput("data_filter", "Filter data", choices = possible_filters,
                        selected = c("first_administration", "monolingual",
                                     "typically_developing"))
     
@@ -173,10 +172,10 @@ function(input, output, session) {
   trajectory_data <- reactive({
     req(filtered_admins()) 
     req(filtered_instrument_tables()) 
-    req(input$words)
-    
+    # req(input$words)
+
     # in case you have changed instruments and your words no longer apply, don't crash
-    if (all(input$words %in% word_options())) {
+    if (!is.null(input$words) && all(input$words %in% word_options())) {
       td <- trajectory_data_fun(filtered_admins(), filtered_instrument_tables(), 
                                 input$measure, input$words) |>
         mutate(item = factor(item_definition, levels = input$words))
@@ -189,8 +188,9 @@ function(input, output, session) {
 
   # ------------------------------ PLOTTING OUTPUT
   ylabel <- reactive({
-    if (input$measure == "understands") "Proportion of Children Understanding"
-    else if (input$measure == "produces") "Proportion of Children Producing"
+    req(input$measure)
+    if (input$measure == "understands") "Proportion of children understanding"
+    else if (input$measure == "produces") "Proportion of children producing"
   })
 
   age_lims <- reactive({
@@ -225,10 +225,10 @@ function(input, output, session) {
     if (nrow(traj) == 0) {
       ggplot(traj) +
         geom_point() +
-        scale_x_continuous(name = "\nAge (months)",
+        scale_x_continuous(name = "Age (months)",
                            breaks = age_lims()[1]:age_lims()[2],
                            limits = c(age_lims()[1], age_lims()[2] + 3)) +
-        scale_y_continuous(name = sprintf("%s\n", ylabel()),
+        scale_y_continuous(name = ylabel(),
                            limits = c(-0.01, 1),
                            breaks = seq(0, 1, 0.25))
     } else {
@@ -240,15 +240,14 @@ function(input, output, session) {
       g <- ggplot(traj, aes(x = age, y = prop, colour = item, fill = item, label = item)) +
         # geom_smooth(aes(linetype = type, weight = total), method = "glm",
         #             method.args = list(family = "binomial")) +
-        geom_smooth(aes(weight = total), method = "loess",
-                    se = FALSE) +
+        geom_smooth(aes(weight = total), method = "loess", se = FALSE, size = 1.2) +
         geom_point(aes(shape = form)) +
         scale_shape_manual(name = "", values = c(20, 1), guide = "none") +
         scale_linetype_discrete(guide = "none") +
-        scale_x_continuous(name = "\nAge (months)",
+        scale_x_continuous(name = "Age (months)",
                            breaks = amin:amax,
                            limits = c(amin, amax + 3)) +
-        scale_y_continuous(name = sprintf("%s\n", ylabel()),
+        scale_y_continuous(name = ylabel(),
                            limits = c(-0.01, 1),
                            breaks = seq(0, 1, 0.25)) +
         langcog::scale_colour_solarized(guide = "none") +
@@ -267,10 +266,17 @@ function(input, output, session) {
     }
   }
   
-  output$trajectory_plot <- renderPlot(trajectory_plot(), height = function() {
-    session$clientData$output_trajectory_plot_width * 0.7
-  })
+  output$trajectory_plot <- renderPlot(trajectory_plot(), res = res)
   
+  output$details <- renderUI({
+    req(trajectory_data())
+    req(nrow(trajectory_data()) > 0)
+    bsCollapse(
+      open = NULL,
+      bsCollapsePanel("More details...",
+                      includeMarkdown("docs/details.md"),
+                      style = "default"))
+  })
   
   # ------------------------ TABLE AND OTHER DATA DOWNLOAD
 
@@ -278,15 +284,17 @@ function(input, output, session) {
     req(trajectory_data())
     req(age_lims())
         
-    traj <- trajectory_data() |> select(-item_id)
+    traj <- trajectory_data()
     if (nrow(traj) == 0) {
-      expand.grid(age = age_lims()[1]:age_lims()[1], form = input$form) |>
+      expand.grid(age = age_lims()[1]:age_lims()[2], form = input$form) |>
         select(form, age)
     } else {
       traj |>
+        select(-item_id) |>
         filter(age >= age_lims()[1],
                age <= age_lims()[2]) |> 
         select(form, age, item, prop) |>
+        mutate(prop = round(prop, 2)) |>
         spread(item, prop)
     }
   })
@@ -295,22 +303,38 @@ function(input, output, session) {
                               include.rownames = FALSE, digits = 2)
 
   output$download_table <- downloadHandler(
-    filename = function() "item_trajectory_table.csv",
+    filename = function() "wordbank_item_trajectories.csv",
     content = function(file) {
       td <- table_data()
-      extra_cols <- data.frame(language = rep(input$language, nrow(td)),
-                               measure = rep(input$measure, nrow(td)))
-      write.csv(bind_cols(extra_cols, td), file, row.names = FALSE)
+      td_write <- td |>
+        mutate(downloaded = lubridate::today(),
+               language = input$language,
+               measure = input$measure) |>
+        select(downloaded, language, form, measure, age, everything())
+      write.csv(td_write, file, row.names = FALSE)
     })
+  
+  output$download_table_button <- renderUI({
+    req(table_data())
+    req(nrow(trajectory_data()) > 0)
+    downloadButton("download_table", "Download table",
+                   class = "btn-default btn-xs")
+  })
 
   output$download_plot <- downloadHandler(
-    filename = function() "item_trajectory.pdf",
+    filename = function() "wordbank_item_trajectories.png",
     content = function(file) {
-      cairo_pdf(file, width = 10, height = 7)
-      print(trajectory_plot())
-      dev.off()
+      ggsave(file, plot = trajectory_plot(), device = "png",
+             width = w, height = h)
     })
-
+  
+  output$download_plot_button <- renderUI({
+    req(trajectory_plot())
+    req(nrow(trajectory_data()) > 0)
+    downloadButton("download_plot", "Download plot",
+                   class = "btn-default btn-xs")
+  })
+  
   output$loaded <- reactive(1)
 
 }
