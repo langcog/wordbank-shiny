@@ -20,7 +20,7 @@ shinyUI(fluidPage(
 
       conditionalPanel(
         condition = "output.loaded == 1",
-        uiOutput("uni_lemma"),
+        selectizeInput("uni_lemma", label = h4("Meaning"), choices = NULL),
         uiOutput("measure_selector"),
         width = 3)),
 
@@ -34,18 +34,19 @@ shinyUI(fluidPage(
                  br(),
                  conditionalPanel(
                    condition = "output.loaded == 1",
-                   div(style='overflow: scroll',
-                       plotOutput("crosslinguistic", height = "725px", width = "100%"),
+                   div(#style='overflow: scroll',
+                       plotOutput("crosslinguistic", height = "auto", width = "100%"),
                        br(),
-                       downloadButton("download_plot", "Download Plot",
-                                      class = "btn-default btn-xs")
+                       uiOutput("download_plot_button"),
+                       br()
                    )
                  )
         ),
         tabPanel("Table",
                  br(),
-                 downloadButton("download_table", "Download Table",
-                                class = "btn-default btn-xs"),
+                 uiOutput("download_table_button"),
+                 # downloadButton("download_table", "Download Table",
+                 #                class = "btn-default btn-xs"),
                  br(), br(),
                  tableOutput("table"))
       )
