@@ -29,7 +29,7 @@ pt_color <- "#839496"
 
 start_language <- "English (American)"
 start_form <- "WS"
-start_measure <- "production"
+start_measure <- "produces"
 start_demo <- "identity"
 
 Sys.setlocale(locale = "en_US.UTF-8")

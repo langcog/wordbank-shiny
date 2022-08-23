@@ -205,6 +205,13 @@ function(input, output, session) {
       max(filtered_instruments$age_max))
   })
   
+  solarized_colors <- c("#268bd2", "#cb4b16", "#859900", "#993399", "#d33682",
+                        "#b58900", "#2aa198", "#6c71c4", "#dc322f")
+  stable_order_palete <- function(num_values) {
+    c(rep(solarized_colors, num_values %/% length(solarized_colors)),
+      solarized_colors[1:(num_values %% length(solarized_colors))])
+  }
+  
   # removing form type
   mean_data <- reactive({
     req(age_lims())
@@ -222,48 +229,45 @@ function(input, output, session) {
     req(trajectory_data())
     
     traj <- trajectory_data()
-    if (nrow(traj) == 0) {
-      ggplot(traj) +
-        geom_point() +
-        scale_x_continuous(name = "Age (months)",
-                           breaks = age_lims()[1]:age_lims()[2],
-                           limits = c(age_lims()[1], age_lims()[2] + 3)) +
-        scale_y_continuous(name = ylabel(),
-                           limits = c(-0.01, 1),
-                           breaks = seq(0, 1, 0.25))
-    } else {
-      amin <- age_lims()[1]
-      amax <- age_lims()[2]
-      
-      traj <- filter(traj, age >= amin, age <= amax)
-      # removed linetype = type from the smoother
-      g <- ggplot(traj, aes(x = age, y = prop, colour = item, fill = item, label = item)) +
-        # geom_smooth(aes(linetype = type, weight = total), method = "glm",
-        #             method.args = list(family = "binomial")) +
-        geom_smooth(aes(weight = total), method = "loess", se = FALSE, size = 1.2) +
-        geom_point(aes(shape = form)) +
-        scale_shape_manual(name = "", values = c(20, 1), guide = "none") +
-        scale_linetype_discrete(guide = "none") +
-        scale_x_continuous(name = "Age (months)",
-                           breaks = amin:amax,
-                           limits = c(amin, amax + 3)) +
-        scale_y_continuous(name = ylabel(),
-                           limits = c(-0.01, 1),
-                           breaks = seq(0, 1, 0.25)) +
-        langcog::scale_colour_solarized(guide = "none") +
-        langcog::scale_fill_solarized(guide = "none") +
-        directlabels::geom_dl(method = list(directlabels::dl.trans(x = x + 0.3),
-                                            "last.qp", cex = 1, fontfamily = font))
-      if (input$mean) {
-        # removed linetype = type
-        g +
-          geom_smooth(aes(weight = total), method = "loess",
-                      se = FALSE, colour = "black", data = mean_data()) +
-          geom_point(aes(shape = form), colour = "black", data = mean_data())
-      } else {
-        g
-      }
-    }
+    amin <- age_lims()[1]
+    amax <- age_lims()[2]
+    
+    g <- ggplot(traj) +
+      # geom_point() +
+      coord_cartesian(clip = "off") +
+      scale_x_continuous(name = "Age (months)",
+                         breaks = amin:amax,
+                         limits = c(amin, amax), # + 3),
+                         expand = expansion(mult = 0.01)) +
+      scale_y_continuous(name = ylabel(),
+                         limits = c(-0.01, 1),
+                         breaks = seq(0, 1, 0.25),
+                         expand = expansion(mult = 0.01)) +
+      theme(plot.margin = margin(8, 100, 8, 8))
+    
+    if (nrow(traj) == 0) return(g)
+    
+    traj <- filter(traj, age >= amin, age <= amax, !is.na(prop))
+    dl <- traj |> group_by(item) |> filter(age == max(age))
+    # g <- ggplot(traj, aes(x = age, y = prop, colour = item, label = item)) +
+    g <- g +
+      geom_point(aes(x = age, y = prop, colour = item, shape = form), alpha = 0.7) +
+      geom_smooth(aes(x = age, y = prop, colour = item, weight = total),
+                  method = "loess", se = FALSE, size = 1.5) +
+      scale_shape_manual(name = "", values = c(20, 1), guide = "none") +
+      scale_colour_manual(guide = "none",
+                          values = stable_order_palete(length(unique(traj$item)))) +
+      directlabels::geom_dl(aes(x = age, y = prop, colour = item, label = item),
+                            data = dl,
+                            method = list(directlabels::dl.trans(x = x + 0.3),
+                                          "last.qp", cex = 1, fontfamily = font))
+    if (!input$mean) return(g)
+    
+    g +
+      geom_smooth(aes(weight = total), method = "loess", size = 1.5,
+                  se = FALSE, colour = "black", data = mean_data()) +
+      geom_point(aes(shape = form), data = mean_data(),
+                 colour = "black", size = 0.6, alpha = 0.7)
   }
   
   output$trajectory_plot <- renderPlot(trajectory_plot(), res = res)
