@@ -39,17 +39,18 @@ fluidPage(
                bsPopover("demo_selector", title = NULL,
                          content = HTML(sprintf("<small>%s</small>", pops$demo)),
                          placement = "right"),
-               uiOutput("data_filter"),
+               uiOutput("data_filter")
              ),
-             wellPanel(
-               selectInput("quantiles", label = strong("Quantiles"),
-                           choices = list("Standard", "Deciles", "Quintiles",
-                                          "Quartiles"),
-                           selected = "Standard"),
-               bsPopover("quantiles", title = NULL,
-                         content = HTML(sprintf("<small>%s</small>", pops$quantile)),
-                         placement = "right"), 
-               actionButton("go", "Add Model Fits"))
+             uiOutput("quantile_panel")
+             # wellPanel(
+             #   selectInput("quantiles", label = strong("Quantiles"),
+             #               choices = list("Standard", "Deciles", "Quintiles",
+             #                              "Quartiles"),
+             #               selected = "Standard"),
+             #   bsPopover("quantiles", title = NULL,
+             #             content = HTML(sprintf("<small>%s</small>", pops$quantile)),
+             #             placement = "right"), 
+             #   actionButton("go", "Add Model Fits"))
            )),
 
     column(9,
@@ -63,25 +64,23 @@ fluidPage(
                         useWaiter(), 
                         condition = "output.loaded == 1",
                         bsAlert("curves_bug"),
-                        plotOutput("plot", width = "100%", height = "auto"),
-                        downloadButton("download_plot", "Download Plot",
-                                       class = "btn-default btn-xs"),
-                        downloadButton("download_data", "Download Raw Data",
-                                       class = "btn-default btn-xs"),
+                        # plotOutput("plot", width = "100%", height = "auto"),
+                        plotOutput("plot",
+                                   width = res * wdth, height = res * hght),
+                        uiOutput("download_plot_button"),
+                        br(),
+                        uiOutput("download_data_button"),
+                        # downloadButton("download_data", "Download Raw Data",
+                        #                class = "btn-default btn-xs"),
                         br(), br(),
-                        bsCollapse(id = "details", open = NULL,
-                                   bsCollapsePanel(
-                                     "More details and important disclaimer...",
-                                     includeMarkdown("docs/details.md"),
-                                     style = "default")
-                        )
+                        uiOutput("details")
                       )),
-             tabPanel("Quantile Table",
+             tabPanel("Quantile table",
                       br(),
-                      tableOutput("table"), 
-                      br(), br(), 
-                      downloadButton("download_table", "Download Table",
-                                     class = "btn-default btn-xs"))
+                      tableOutput("table"),
+                      br(),
+                      uiOutput("download_table_button")
+             )
            )
     )
   )

@@ -6,21 +6,28 @@
 
 library(gamlss) # needs to go early because of mass dependency
 source("helper.R")
+pops <- jsonlite::read_json("docs/popovers.json")
 
 
 # --------------------- STATE PRELIMINARIES ------------------
 
-admins <- get_administration_data(filter_age = FALSE, 
-                                  include_demographic_info = TRUE, 
+possible_filters =  c("cross-sectional only" = "first_administration",
+                      "normative sample only" = "is_norming", 
+                      "monolingual only" = "monolingual", 
+                      "typically developing only" = "typically_developing")
+demo_cols <- unname(c(unlist(possible_demo_fields), possible_filters))
+
+admins <- get_administration_data(filter_age = FALSE,
+                                  include_demographic_info = TRUE,
                                   include_birth_info = TRUE,
-                                  include_language_exposure = TRUE, 
+                                  include_language_exposure = TRUE,
                                   include_health_conditions = TRUE) |>
   mutate(identity = "All Data",
          monolingual = map_lgl(language_exposures, 
                                function(language_exposures) {
                                  is_null(language_exposures) || nrow(language_exposures) == 1
                                }), 
-         typically_developing = map_lgl(health_conditions, 
+         typically_developing = map_lgl(health_conditions,
                                         function(health_conditions) {
                                           is_null(health_conditions)
                                         }))  |>
@@ -29,8 +36,11 @@ admins <- get_administration_data(filter_age = FALSE,
   mutate(n = 1:n(), 
          first_administration = n == 1) |>
   select(-n) |>
-  ungroup(dataset_name, child_id) |>
-  gather(measure, vocab, comprehension, production) 
+  ungroup() |>
+  pivot_longer(c(comprehension, production),
+               names_to = "measure", values_to = "vocab")|>
+  select(language, form, form_type, data_id, child_id, age, measure, vocab,
+         {{ demo_cols }})
 
 
 instruments <- get_instruments()
@@ -38,6 +48,10 @@ languages <- sort(unique(instruments$language))
 
 alerted <- FALSE
 
+start_plot <- ggplot() +
+  scale_x_continuous(limits = c(8, 36), breaks = seq(8, 36, 4)) +
+  scale_y_continuous(limits = c(0, 800)) +
+  labs(x = "Age (months)", y = "Size of vocabulary")
 
 # ---------------------- BEGIN SHINY SERVER ------------------
 function(input, output, session) {
@@ -73,7 +87,8 @@ function(input, output, session) {
   output$language_selector <- renderUI({
     selectizeInput("language", label = strong("Language"),
                    choices = c("", languages), 
-                   selected = "")
+                   selected = "",
+                   options = list(placeholder = "Select a language..."))
   })
   
   
@@ -113,6 +128,18 @@ function(input, output, session) {
                    choices = measures(), selected = start_measure)
   })
   
+  output$quantile_panel <- renderUI({
+    req(data())
+    wellPanel(
+      selectInput("quantiles", label = strong("Quantiles"),
+                  choices = list("Standard", "Deciles", "Quintiles",
+                                 "Quartiles"),
+                  selected = "Standard"),
+      bsPopover("quantiles", title = NULL,
+                content = HTML(sprintf("<small>%s</small>", pops$quantile)),
+                placement = "right"), 
+      actionButton("go", "Add model fits"))
+  })
   
   
   # ---------------------- DATA PROCESSING STEP 1: GET ADMINS
@@ -135,15 +162,10 @@ function(input, output, session) {
   output$data_filter <- renderUI({
     req(form_admins())
     
-    possible_filters =  c("cross-sectional only" = "first_administration",
-                          "normative sample only" = "is_norming", 
-                          "monolingual only" = "monolingual", 
-                          "typically developing only" = "typically_developing")
-    
     available_filters <- possible_filters |>
       keep(\(filt) !all(is.na(form_admins()[[filt]]) | !form_admins()[[filt]]))
     
-    checkboxGroupInput("data_filter", "Choose Data", choices = possible_filters,
+    checkboxGroupInput("data_filter", "Filter data", choices = possible_filters,
                        selected = c("first_administration", "monolingual",
                                     "typically_developing"))
     
@@ -199,7 +221,7 @@ function(input, output, session) {
     )
     
     # actual selector
-    selectInput("demo", label = strong("Split Variable"),
+    selectInput("demo", label = strong("Grouping variable"),
                 choices = demo_fields, selected = start_demo)
   })
   
@@ -218,12 +240,17 @@ function(input, output, session) {
                            row.names = NULL)
     demo_map$clump <- factor(demo_map$clump, levels = groups$clump)
     
-    filtered_admins() |>
+    filt <- input$data_filter
+    df <- filtered_admins() |>
+      ungroup() |>
       rename(demo = {input$demo}) |> # this is a glue "injection"
       left_join(demo_map) |>
       right_join(groups) |>
       select(-demo) |>
-      rename(demo = clump)
+      rename(demo = clump) |>
+      select(language, form, form_type, data_id, child_id, age, measure, vocab,
+             demo, n, demo_label, {{ filt }})
+    return(df)
   })
   
   # ------------------------------ PLOTTING OUTPUT
@@ -256,7 +283,8 @@ function(input, output, session) {
   # using waiter package to set up waiting screens
   w <- Waiter$new(
     id = "plot",
-    html = bs5_spinner(color = "danger"),
+    html = spin_loader(),
+    # html = bs5_spinner(color = "danger"),
     color = transparent(.5),
   )
   
@@ -269,7 +297,6 @@ function(input, output, session) {
     print("curves")
     
     w$show()
-    
     # model
     max_vocab <- max(data()$vocab)
     mod_data <- data() |>
@@ -308,7 +335,7 @@ function(input, output, session) {
   # the way the plot works is it sits in a reactive value container
   # it is modified whenever language, form, measure, or demographic is changed
   # but it also can be over-ridden by the "fit models" button
-  v <- reactiveValues(plot = NULL)
+  v <- reactiveValues(plot = start_plot)
   
   # MAKE PLOT
   observeEvent(
@@ -333,16 +360,18 @@ function(input, output, session) {
         langcog::solarized_palette()
       
       # assign plot
-      v$plot <- ggplot(data(), aes(x = age, y = vocab)) + 
+      v$plot <- ggplot(data(), aes(x = age, y = vocab)) +
         geom_jitter(size = .6, color = pt_color, alpha = .7) +
         scale_x_continuous(name = "Age (months)",
                            breaks = seq(age_min(), age_max(), by = 2),
-                           limits = c(age_min(), age_max())) +
-        scale_y_continuous(name = ylabel(),#paste0(ylabel(), "\n"),
-                           limits = c(0, max(data()$vocab))) + 
-        geom_smooth(aes(col = demo_label), size = 1.5, 
-                    method = "loess", span = 1, se = FALSE) + 
-        scale_color_manual(name = demo_label, 
+                           limits = c(age_min(), age_max()),
+                           expand = expansion(mult = 0.01)) +
+        scale_y_continuous(name = ylabel(),
+                           limits = c(0, max(data()$vocab)),
+                           expand = expansion(mult = 0.01)) +
+        geom_smooth(aes(col = demo_label), size = 1.5,
+                    method = "loess", span = 1, se = FALSE) +
+        scale_color_manual(name = demo_label,
                            values = colour_values) +
         theme(legend.position = "bottom")
     })
@@ -360,69 +389,107 @@ function(input, output, session) {
       langcog::solarized_palette() |>
       rev()
     
+    # write_rds(curves(), "../thumbnails/sample_curves.rds")
+    v$plot <- ggplot(data(), aes(x = age, y = vocab)) + 
+      facet_wrap(vars(demo_label)) + #, labeller = label_both()) +
+      coord_cartesian(clip = "off") +
+      geom_jitter(size = .6, color = pt_color, alpha = .7) +
+      geom_line(data = curves(),
+                aes(x = x, y = predicted, colour = percentile), size = 1.5) +
+      directlabels::geom_dl(aes(x = x, y = predicted, label = percentile,
+                                colour = percentile), data = curves(),
+                            method = list("last.qp", directlabels::dl.trans(x = x + 0.2),
+                                          cex = 1, fontfamily = font)) +
+      scale_x_continuous(name = "Age (months)",
+                         breaks = seq(age_min(), age_max(), by = 2),
+                         limits = c(age_min(), age_max()),
+                         expand = expansion(mult = 0.01)) +
+      scale_y_continuous(name = ylabel(),
+                         limits = c(0, max(data()$vocab)),
+                         expand = expansion(mult = 0.01)) + 
+      scale_color_manual(name = "Quantile", values = colour_values, guide = "none") +
+      theme(plot.margin = margin(8, 20, 8, 8),
+            panel.spacing.x = unit(20, "pt"))
+    
     on.exit({
       w$hide()
     })
-    
-    v$plot <- ggplot(data(), aes(x = age, y = vocab)) + 
-      facet_wrap(~demo_label) +
-      geom_jitter(size = .6, color = pt_color, alpha = .7) +
-      scale_x_continuous(name = "Age (months)",
-                         breaks = seq(age_min(), age_max(), by = 2),
-                         limits = c(age_min(), age_max())) +
-      scale_y_continuous(name = ylabel(),#paste0(ylabel(), "\n"),
-                         limits = c(0, max(data()$vocab))) + 
-      geom_line(data = curves(),
-                aes(x = x, y = predicted, col = percentile), size = 1.5) +
-      facet_wrap(~demo_label) +
-      scale_color_manual(name = "Quantile", values = colour_values) +
-      guides(color = guide_legend(reverse = TRUE))
+
   })
   
-  height_fun <- function() session$clientData$output_plot_width * 0.7
-  
-  output$plot <- renderPlot(v$plot, height = height_fun)
-  
+  output$plot <- renderPlot(v$plot, res = res)
   
   table_data <- eventReactive(input$go, {
-    # print(curves())
-    curves() |>
+    demo_name <- input$demo
+    td <- curves() |>
+      ungroup() |>
       select(age = x, quantile = percentile, predicted, demo) |>
       distinct() |>
-      spread(quantile, predicted) |>
+      mutate(predicted = round(predicted, 1),
+             age = as.integer(age)) |>
+      pivot_wider(names_from = quantile, values_from = predicted) |>
       arrange(demo) |>
-      rename_(.dots = setNames("demo", input$demo))
+      rename({{demo_name}} := demo)
+    if (demo_name == "identity") td <- td |> select(-identity)
+    return(td)
   })
-  
-  output$table <- renderTable(table_data(), include.rownames = FALSE,
-                              digits = 1)
-  
+    
+  output$table <- renderTable(table_data(), include.rownames = FALSE, digits = 1)
+
+  output$details <- renderUI({
+    req(data())
+    bsCollapse(id = "details", open = NULL,
+               bsCollapsePanel(
+                 "More details and important disclaimer...",
+                 includeMarkdown("docs/details.md"),
+                 style = "default")
+    )
+  })
   
   # --------------------- DOWNLOADING HANDLERS ETC
   
   output$download_table <- downloadHandler(
-    filename = function() "vocabulary_norms_table.csv",
+    filename = function() "wordbank_vocab_table.csv",
     content = function(file) {
-      td <- table_data()
-      extra_cols <- data.frame(language = rep(input$language, nrow(td)),
-                               form = rep(input$form, nrow(td)),
-                               measure = rep(input$measure, nrow(td)))
-      write.csv(bind_cols(extra_cols, td), file, row.names = FALSE)
+      td <- table_data() |>
+        mutate(downloaded = lubridate::today(),
+               language = input$language, form = input$form,
+               measure = input$measure, .before = everything())
+      write.csv(td, file, row.names = FALSE)
     })
+
+  output$download_table_button <- renderUI({
+    req(table_data())
+    downloadButton("download_table", "Download table",
+                   class = "btn-default btn-xs")
+  })
   
   output$download_data <- downloadHandler(
-    filename = function() "vocabulary_norms_data.csv",
+    filename = function() "wordbank_vocab_data.csv",
     content = function(file) {
-      write.csv(data(), file, row.names = FALSE)
+      demo_name <- input$demo
+      df <- data() |> rename({{ demo_name }} := demo) |> select(-demo_label) |>
+        mutate(downloaded = lubridate::today(), .before = everything())
+      if (demo_name == "identity") df <- df |> select(-identity)
+      write.csv(df, file, row.names = FALSE)
     })
+
+  output$download_data_button <- renderUI({
+    req(data())
+    downloadButton("download_data", "Download raw data",
+                   class = "btn-default btn-xs")
+  })
   
   output$download_plot <- downloadHandler(
-    filename = function() "vocabulary_norms.pdf",
+    filename = function() "wordbank_vocab_norms.png",
     content = function(file) {
-      cairo_pdf(file, width = 10, height = 7)
-      print(plot())
-      dev.off()
+      ggsave(file, plot = v$plot, device = "png", width = wdth, height = hght)
     })
+  
+  output$download_plot_button <- renderUI({
+    downloadButton("download_plot", "Download plot",
+                   class = "btn-default btn-xs")
+  })
   
   output$loaded <- reactive(1)
 }

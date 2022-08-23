@@ -8,7 +8,7 @@ library(waiter) # for waiting bar
 select <- dplyr::select
 
 font <- "Source Sans Pro"
-theme_set(theme_bw(base_size = 18, base_family = font))
+theme_set(theme_bw(base_size = 16, base_family = font))
 theme_update(panel.grid = ggplot2::element_blank(),
              strip.background = ggplot2::element_blank(),
              legend.key = ggplot2::element_blank(),
@@ -21,10 +21,10 @@ shiny_theme <- shinythemes::shinytheme("cosmo")
 # constants
 possible_demo_fields <- list("None" = "identity",
                              "Birth Order" = "birth_order",
-                             "Race" = "race",
+                             "Caregiver's Education" = "caregiver_education",
+                             "Sex" = "sex",
                              "Ethnicity" = "ethnicity",
-                             "Gender" = "sex",
-                             "Mother's Education" = "mom_ed")
+                             "Race" = "race")
 pt_color <- "#839496"
 
 start_language <- "English (American)"

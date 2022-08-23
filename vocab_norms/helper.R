@@ -15,7 +15,7 @@ clump_step <- function(groups, map, fun_demo, min_obs = 100) {
     clump_demo <- paste(small_groups$demo, collapse = ", ")
     clump <- data.frame(demo = clump_demo, n = sum(small_groups$n))
     clumped <- bind_rows(fine_groups, clump)
-  } else if (fun_demo %in% c("sex", "mom_ed")) {
+  } else if (fun_demo %in% c("sex", "caregiver_education")) {
     smallest <- row.names(groups)[groups$n == min(groups$n)] %>% as.numeric()
     neighbor <- row.names(groups)[groups$n == min(groups[smallest - 1,]$n,
                                                   groups[smallest + 1,]$n,
