@@ -55,7 +55,7 @@ shinyServer(function(input, output) {
     req(input$source)
     
     if (input$source == "W2V"){
-      title <- "Minimum Cosine Similarity"
+      title <- "Minimum cosine similarity"
       high_point <- .7
       start_point <- .4
       low_point <- .1
@@ -67,7 +67,7 @@ shinyServer(function(input, output) {
     #   low_point <- -1
     #   step_size <- .1
     } else if (input$source == "MFN"){
-      title <- "Number of Shared Features"
+      title <- "Number of shared features"
       high_point <- 4
       start_point <- 2
       low_point <- 1
@@ -214,7 +214,8 @@ shinyServer(function(input, output) {
                  opacityNoHover = .8,
                  legend = input$group != "identity",
                  linkColour = "#cccccc", 
-                 fontSize = 12)
+                 fontSize = 12,
+                 fontFamily = font)
   })
   
   output$loaded <- reactive(1)
