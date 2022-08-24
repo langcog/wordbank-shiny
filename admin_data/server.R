@@ -97,8 +97,8 @@ function(input, output, session) {
   })
 
   output$table <- DT::renderDataTable(
-    filtered_data(), server = TRUE, style = "bootstrap", rownames = FALSE,
-    selection = "none",
+    filtered_data(),
+    server = TRUE, style = "bootstrap", rownames = FALSE, selection = "none",
     options = list(orderClasses = TRUE, processing = TRUE, pageLength = 25)
   )
   
@@ -107,8 +107,12 @@ function(input, output, session) {
 
   # --------------------- DOWNLOAD
   output$download_data <- downloadHandler(
-    filename = function() "administration_data.csv",
-    content = function(file) write.csv(filtered_data(), file, row.names = FALSE)
+    filename = function() "wordbank_administration_data.csv",
+    content = function(file) {
+      fd <- filtered_data() |>
+        mutate(downloaded = lubridate::today(), .before = everything())
+      write.csv(fd, file, row.names = FALSE)
+    }
   )
 
   output$loaded <- reactive(1)

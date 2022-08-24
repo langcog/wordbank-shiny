@@ -23,7 +23,7 @@ function(input, output, session) {
     req(input$language)
     
     forms <- filter(instruments, 
-                    language == input$language) %>%
+                    language == input$language) |>
       pull(form)
     
     selectizeInput("form", label = h4("Form"),
@@ -35,15 +35,10 @@ function(input, output, session) {
     req(input$language, 
         input$form)
 
-    gid <- get_instrument_data(language = input$language, 
+    get_instrument_data(language = input$language, 
                         form = input$form,
                         item_info = TRUE,
-                        administration_info = TRUE) %>%
-      # left_join(get_administration_data(language = input$language, 
-      #                                   form = input$form, 
-      #                                   include_demographic_info = TRUE,
-      #                                   mode = mode, 
-      #                                   db_args = db_args)) %>%
+                        administration_info = TRUE) |>
       select(data_id, item_kind, category, item_id, item_definition,
              english_gloss, uni_lemma, child_id, age, value) |>
              # caregiver_education, sex) # include demographics?
@@ -58,17 +53,17 @@ function(input, output, session) {
 
   # -------------------- DOWNLOADS ETC 
   output$download_button <- renderUI({
-    if (!is.null(data())) {
-      downloadButton("download_data", "Download Data",
-                     class = "btn-xs")
-    }
+    req(data())
+    downloadButton("download_data", "Download data", class = "btn-xs")
   })
   
   output$download_data <- downloadHandler(
-    filename = function() "instrument_data.csv",
+    filename = function() "wordbank_instrument_data.csv",
     content = function(file) {
-      cat(nrow(data()))
-      write.csv(data(), file, row.names = FALSE)
+      df <- data() |>
+        mutate(downloaded = lubridate::today(), .before = everything())
+      message(nrow(df))
+      write.csv(df, file, row.names = FALSE)
     })
   
   output$loading <- renderImage(list(src = "../images/loading.gif",

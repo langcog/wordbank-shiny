@@ -1,8 +1,10 @@
 # ###################### ITEM-LEVEL SUMMARY DATA ######################
 
 # choose form with limited data for testing
-start_language <- "American Sign Language"
-start_form <- "FormA"
+# start_language <- "American Sign Language"
+# start_form <- "FormA"
+start_language <- "English (American)"
+start_form <- "WS"
 
 # LOAD DATA
 instruments <- get_instruments()
@@ -16,24 +18,23 @@ function(input, output, session) {
 
   # -------------------- SELECTORS FOR DATA
   output$language_selector <- renderUI({
-    selectizeInput("language", label = h4("Language"),
-                   choices = languages, selected = start_language)
+    selectInput("language", label = h4("Language"),
+                choices = languages, selected = start_language)
   })
  
   output$form_selector <- renderUI({
     req(input$language)
     
-    forms <- filter(instruments, 
-           language == input$language) %>%
-      pull(form)
+    forms <- instruments |> filter(language == input$language) |> pull(form)
   
-    selectizeInput("form", label = h4("Form"),
-                   choices = forms, selected = start_form)
+    selectInput("form", label = h4("Form"),
+                choices = forms, selected = start_form)
   })
   
   output$measure_selector <- renderUI({
     req(input$form)
     
+    # TODO: use form_type
     if (input$form %in% "WG") {
       measures <- list("Produces" = "produces", "Understands" = "understands")
     } else {
@@ -41,14 +42,14 @@ function(input, output, session) {
     }
     
     selectInput("measure", label = h4("Measure"),
-                choices = measures, selected = input$measure)
+                choices = measures, selected = "")
   })
   
   output$age_selector <- renderUI({
     req(input$language)
     req(input$form)
     
-    instrument <- instruments %>% 
+    instrument <- instruments |> 
       filter(language == input$language, 
              form == input$form) 
     
@@ -78,13 +79,14 @@ function(input, output, session) {
     get_instrument_data(language = input$language, 
                         form = input$form,
                         item_info = TRUE,
-                        administration_info = TRUE) %>%
-      filter(item_kind == "word") %>%
-      gather(measure, value, produces, understands) %>%
+                        administration_info = TRUE) |>
+      filter(item_kind == "word") |>
+      gather(measure, value, produces, understands) |>
       filter(measure == input$measure,
-             age >= input$age[1], age <= input$age[2]) %>%
-      group_by(item_id, item_definition, category, age) %>%
-      summarise(prop = round(sum(value, na.rm = TRUE) / length(value), 2)) %>%
+             age >= input$age[1], age <= input$age[2]) |>
+      mutate(item_id = as.numeric(str_remove(item_id, "item_"))) |>
+      group_by(item_id, item_definition, category, age) |>
+      summarise(prop = round(sum(value, na.rm = TRUE) / length(value), 2)) |>
       spread(age, prop)
   })
   
@@ -97,16 +99,16 @@ function(input, output, session) {
   # -------------------- DOWNLOADS ETC 
   
   output$download_button <- renderUI({
-    if (!is.null(data())) {
-      downloadButton("download_all", "Download Data",
-                     class = "btn-xs")
-    }
+    req(data())
+    downloadButton("download_all", "Download Data", class = "btn-xs")
   })
 
   output$download_all <- downloadHandler(
-    "item_data.csv",
+    filename = function() "wordbank_item_data.csv",
     content <- function(file) {
-      write.csv(data(), file, row.names = FALSE)
+      d <- data() |>
+        mutate(downloaded = lubridate::today(), .before = everything())
+      write.csv(d, file, row.names = FALSE)
     })
   
   output$loading <- renderImage(list(src = "../images/loading.gif",

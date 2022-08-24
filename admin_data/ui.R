@@ -18,12 +18,12 @@ fluidPage(
       column(2, uiOutput("form_selector")),
       # ),
       # fluidRow(
-      column(2, uiOutput("health_conditions_selector")),
+      column(3, uiOutput("health_conditions_selector")),
       column(2, uiOutput("language_status_selector")),
       column(3, uiOutput("age_selector")),
     ),
     fluidRow(
-      column(1, downloadButton("download_data", "Download Data", class = "btn-xs"),
+      column(1, downloadButton("download_data", "Download data", class = "btn-xs"),
              align = "right"),
       br(), br()
     ),
