@@ -214,17 +214,17 @@ function(input, output, session) {
   }
   
   # removing form type
-  mean_data <- reactive({
-    req(age_lims())
-    
-    trajectory_data() |>
-      group_by(form, age) |>
-      summarise(prop = mean(prop),
-                total = sum(total)) |>
-      mutate(item = "mean") |> 
-      filter(age >= age_lims()[1],
-             age <= age_lims()[2])
-  })
+  # mean_data <- reactive({
+  #   req(age_lims())
+  #   
+  #   trajectory_data() |>
+  #     group_by(form, age) |>
+  #     summarise(prop = mean(prop),
+  #               total = sum(total)) |>
+  #     mutate(item = "mean") |> 
+  #     filter(age >= age_lims()[1],
+  #            age <= age_lims()[2])
+  # })
   
   trajectory_plot <- function() {
     req(trajectory_data())
@@ -251,7 +251,7 @@ function(input, output, session) {
     traj <- filter(traj, age >= amin, age <= amax, !is.na(prop))
     dl <- traj |> group_by(item) |> filter(age == max(age))
     # g <- ggplot(traj, aes(x = age, y = prop, colour = item, label = item)) +
-    g <- g +
+    g +
       geom_point(aes(x = age, y = prop, colour = item, shape = form), alpha = 0.7) +
       geom_smooth(aes(x = age, y = prop, colour = item, weight = total),
                   method = "loess", se = FALSE, size = 1.5) +
@@ -262,13 +262,13 @@ function(input, output, session) {
                             data = dl,
                             method = list(directlabels::dl.trans(x = x + 0.3),
                                           "last.qp", cex = 1, fontfamily = font))
-    if (!input$mean) return(g)
-    
-    g +
-      geom_smooth(aes(weight = total), method = "loess", size = 1.5,
-                  se = FALSE, colour = "black", data = mean_data()) +
-      geom_point(aes(shape = form), data = mean_data(),
-                 colour = "black", size = 0.6, alpha = 0.7)
+    # if (!input$mean) return(g)
+    # 
+    # g +
+    #   geom_smooth(aes(weight = total), method = "loess", size = 1.5,
+    #               se = FALSE, colour = "black", data = mean_data()) +
+    #   geom_point(aes(shape = form), data = mean_data(),
+    #              colour = "black", size = 0.6, alpha = 0.7)
   }
   
   output$trajectory_plot <- renderPlot(trajectory_plot(), res = res)

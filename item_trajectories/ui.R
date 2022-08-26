@@ -45,7 +45,7 @@ ui <- function(request) {
                  #        content = HTML(sprintf("<small>%s</small>", pops$words)),
                  #        placement = "right"),
                  uiOutput("word_selector"),
-                 checkboxInput("mean", "Mean of words")
+                 # checkboxInput("mean", "Mean of words")
                ),
                br(), bookmark
              )),
