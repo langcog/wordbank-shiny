@@ -10,7 +10,8 @@ flatten_tibble <- function(tib) {
 admins <- get_administration_data(include_demographic_info = TRUE, 
                                   include_birth_info = TRUE,
                                   include_language_exposure = TRUE, 
-                                  include_health_conditions = TRUE) %>%
+                                  include_health_conditions = TRUE,
+                                  db_args = shiny_db_args) %>%
   mutate(monolingual = map_lgl(language_exposures, 
                                \(le) is_null(le) || nrow(le) == 1),
          typically_developing = map_lgl(health_conditions, \(hc) is_null(hc)),

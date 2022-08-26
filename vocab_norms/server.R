@@ -21,7 +21,8 @@ admins <- get_administration_data(filter_age = FALSE,
                                   include_demographic_info = TRUE,
                                   include_birth_info = TRUE,
                                   include_language_exposure = TRUE,
-                                  include_health_conditions = TRUE) |>
+                                  include_health_conditions = TRUE,
+                                  db_args = shiny_db_args) |>
   mutate(identity = "All Data",
          monolingual = map_lgl(language_exposures, 
                                function(language_exposures) {
@@ -43,7 +44,7 @@ admins <- get_administration_data(filter_age = FALSE,
          {{ demo_cols }})
 
 
-instruments <- get_instruments()
+instruments <- get_instruments(db_args = shiny_db_args)
 languages <- sort(unique(instruments$language))
 
 alerted <- FALSE

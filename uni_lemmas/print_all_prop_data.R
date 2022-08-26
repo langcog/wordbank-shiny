@@ -9,19 +9,13 @@ font <- "Open Sans"
 
 # Connect to the Wordbank database and pull out the raw data.
 # data_mode <- "remote"
-db_args <- list(host = "wordbank2-dev.canyiscnpddk.us-west-2.rds.amazonaws.com",
-                dbname = "wordbank",
-                user = "wordbank_reader",
-                password = "ICanOnlyRead@99")
-
-
 # all_prop_data <- feather::read_feather(here("shiny_apps/uni_lemmas/all_prop_data.feather"))
-uni_lemmas <- unique(wordbankr::get_crossling_items(db_args = db_args)$uni_lemma)
+uni_lemmas <- unique(wordbankr::get_crossling_items(db_args = shiny_db_args)$uni_lemma)
 start_lemma <- "dog"
 kid_min <- 3
 points_min <- 3
 
-all_data <- wordbankr::get_instruments(db_args = db_args) %>%
+all_data <- wordbankr::get_instruments(db_args = shiny_db_args) %>%
   split(list(.$language, .$form), drop = TRUE) |>
   map_df(function(x){
     print(x)
@@ -29,7 +23,7 @@ all_data <- wordbankr::get_instruments(db_args = db_args) %>%
                                         form = x$form,
                                         administration_info = TRUE, 
                                         item_info = TRUE, 
-                                        db_args = db_args)
+                                        db_args = shiny_db_args)
     return(y)
   })  
 

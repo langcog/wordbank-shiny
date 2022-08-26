@@ -18,6 +18,17 @@ theme_update(panel.grid = ggplot2::element_blank(),
 
 shiny_theme <- shinythemes::shinytheme("cosmo")
 
+# slightly hacky way to determine if you're on the shiny server
+# use localhost if on shiny server
+hostname <- system("hostname", intern = TRUE)
+host <- if (hostname == "ip-172-31-32-12") "localhost" else "server.wordbank.stanford.edu"
+shiny_db_args <- list(
+  host = host,
+  dbname = "wordbank",
+  user = "wordbank",
+  password = "wordbank"
+)
+
 # constants
 possible_demo_fields <- list("None" = "identity",
                              "Birth Order" = "birth_order",
@@ -56,4 +67,3 @@ form_names <- list("Words and Gestures" = "WG",
                    "Words and Sentences (Short Form)" = "WSShort",
                    "Words and Gestures (Short Form)" = "WGShort",
                    "Oxford Short Form" = "OxfordShort")
-

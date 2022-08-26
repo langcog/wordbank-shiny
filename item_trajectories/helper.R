@@ -9,7 +9,8 @@ trajectory_data_fun <- function(fun_admins, fun_instrument, fun_measure,
     get_instrument_data(language = inst$language,
                         form = inst$form,
                         items = word_ids[!is.na(word_ids)],
-                        administration_info = fun_admins) %>%
+                        administration_info = fun_admins,
+                        db_args = shiny_db_args) %>%
       mutate(instrument_id = inst_id)
   }
   

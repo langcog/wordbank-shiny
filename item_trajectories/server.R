@@ -11,7 +11,8 @@ admins <- get_administration_data(filter_age = FALSE,
                                   include_demographic_info = TRUE,
                                   include_birth_info = TRUE,
                                   include_language_exposure = TRUE,
-                                  include_health_conditions = TRUE) |>
+                                  include_health_conditions = TRUE,
+                                  db_args = shiny_db_args) |>
   mutate(monolingual = map_lgl(language_exposures,
                                function(language_exposures) {
                                  is_null(language_exposures) || nrow(language_exposures) == 1
@@ -30,9 +31,9 @@ admins <- get_administration_data(filter_age = FALSE,
 # saveRDS(admins, "admins.rds")
 # admins <- readRDS("admins.rds")
 
-items <- get_item_data() 
+items <- get_item_data(db_args = shiny_db_args) 
 
-instruments <- get_instruments()
+instruments <- get_instruments(db_args = shiny_db_args)
 languages <- sort(unique(instruments$language))
 
 

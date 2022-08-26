@@ -4,7 +4,7 @@
 start_language <- "English (American)"
 start_form <- "WS"
 
-instruments <- get_instruments()
+instruments <- get_instruments(db_args = shiny_db_args)
 languages <- sort(unique(instruments$language))
 
 # ----------------------- MAIN SHINY SERVER  ----------------------- 
@@ -38,7 +38,8 @@ function(input, output, session) {
     get_instrument_data(language = input$language, 
                         form = input$form,
                         item_info = TRUE,
-                        administration_info = TRUE) |>
+                        administration_info = TRUE,
+                        db_args = shiny_db_args) |>
       select(data_id, item_kind, category, item_id, item_definition,
              english_gloss, uni_lemma, child_id, age, value) |>
              # caregiver_education, sex) # include demographics?
