@@ -18,15 +18,18 @@ theme_update(panel.grid = ggplot2::element_blank(),
 
 shiny_theme <- shinythemes::shinytheme("cosmo")
 
+enableBookmarking()
+bookmark <- bookmarkButton("Save settings", class = "btn-default btn-xs")
+
 # slightly hacky way to determine if you're on the shiny server
 # use localhost if on shiny server
-hostname <- system("hostname", intern = TRUE)
-host <- if (hostname == "ip-172-31-32-12") "localhost" else "server.wordbank.stanford.edu"
+my_host <- system("hostname", intern = TRUE)
+db_host <- if (my_host == "ip-172-31-32-12") "localhost" else get_wordbank_args()$host
 shiny_db_args <- list(
-  host = host,
+  host = db_host,
   dbname = "wordbank",
-  user = "wordbank",
-  password = "wordbank"
+  user = "wordbank_reader",
+  password = "ICanOnlyRead@99"
 )
 
 # constants
