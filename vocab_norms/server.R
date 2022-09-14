@@ -401,15 +401,19 @@ function(input, output, session) {
                                 colour = percentile), data = curves(),
                             method = list("last.qp", directlabels::dl.trans(x = x + 0.2),
                                           cex = 1, fontfamily = font)) +
+      directlabels::geom_dl(aes(x = age_max(), y = Inf, label = label),
+                            data = tibble(label = "Quantile"),
+                            method = list("last.qp", directlabels::dl.trans(x = x + 1, rot = 270),
+                                          cex = 1, fontfamily = font, hjust = 0)) +
       scale_x_continuous(name = "Age (months)",
                          breaks = seq(age_min(), age_max(), by = 2),
                          limits = c(age_min(), age_max()),
                          expand = expansion(mult = 0.01)) +
       scale_y_continuous(name = ylabel(),
                          limits = c(0, max(data()$vocab)),
-                         expand = expansion(mult = 0.01)) + 
+                         expand = expansion(mult = 0.01)) +
       scale_color_manual(name = "Quantile", values = colour_values, guide = "none") +
-      theme(plot.margin = margin(8, 20, 8, 8),
+      theme(plot.margin = margin(8, 30, 8, 8),
             panel.spacing.x = unit(20, "pt"))
     
     on.exit({
