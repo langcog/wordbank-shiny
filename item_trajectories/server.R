@@ -79,7 +79,8 @@ function(input, output, session) {
   measures <- reactive({
     req(form_admins())
     form_type <- unique(form_admins()$form_type)
-    if ("WS" %in% form_type) "produces" else c("understands", "produces")
+    if ("WS" %in% form_type) list("Produces" = "produces")
+    else list("Produces" = "produces", "Understands" = "understands")
   })
   
   output$measure_selector <- renderUI({
@@ -227,7 +228,6 @@ function(input, output, session) {
     amax <- age_lims()[2]
     
     g <- ggplot(traj) +
-      # geom_point() +
       coord_cartesian(clip = "off") +
       scale_x_continuous(name = "Age (months)",
                          breaks = amin:amax,
@@ -243,11 +243,8 @@ function(input, output, session) {
     
     traj <- filter(traj, age >= amin, age <= amax, !is.na(prop))
     dl <- traj |> group_by(item) |> filter(age == max(age))
-    # g <- ggplot(traj, aes(x = age, y = prop, colour = item, label = item)) +
-    g +
+    g <- g +
       geom_point(aes(x = age, y = prop, colour = item, shape = form), alpha = 0.7) +
-      geom_smooth(aes(x = age, y = prop, colour = item, weight = total),
-                  method = "loess", se = FALSE, size = 1.5) +
       scale_shape_manual(name = "", values = c(20, 1), guide = "none") +
       scale_colour_manual(guide = "none",
                           values = stable_order_palete(length(unique(traj$item)))) +
@@ -255,6 +252,18 @@ function(input, output, session) {
                             data = dl,
                             method = list(directlabels::dl.trans(x = x + 0.3),
                                           "last.qp", cex = 1, fontfamily = font))
+    
+    if (input$smoother == "loess") {
+      g +
+        geom_smooth(aes(x = age, y = prop, colour = item, weight = total),
+                    method = "loess", se = FALSE, size = 1.5)
+    } else if (input$smoother == "logistic") {
+      g +
+        geom_smooth(aes(x = age, y = prop, colour = item, weight = total),
+                    se = FALSE, size = 1.5, span = 1,
+                    method = "glm", method.args = list(family = "binomial"))
+    }
+    
     # if (!input$mean) return(g)
     # 
     # g +

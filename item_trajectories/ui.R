@@ -36,7 +36,9 @@ ui <- function(request) {
                  bsPopover("measure_selector", title = NULL,
                            content = HTML(sprintf("<small>%s</small>", pops$measure)),
                            placement = "right"),
-                 uiOutput("data_filter")),
+                 uiOutput("data_filter"),
+                 selectInput("smoother", label = "Smoother",
+                             choices = c("loess", "logistic"))),
                
                wellPanel(
                  # popify(selectInput("words", label = strong("Words"),
