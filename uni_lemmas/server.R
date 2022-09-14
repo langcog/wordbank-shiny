@@ -24,8 +24,14 @@ shinyServer(function(input, output, session) {
                 selected = start_measure)
   })
 
-  uni_lemma_data <- function() {
-    req(input$uni_lemma)
+  output$languages_selector <- renderUI({
+    languages <- unique(languages_data()$language)
+    selectInput("languages", label = h4("Languages"), multiple = TRUE,
+                choices = languages, selected = languages)
+  })
+  
+  languages_data <- reactive({
+    req(input$uni_lemma, input$measure)
 
     all_prop_data %>%
       group_by(language) %>%
@@ -34,17 +40,22 @@ shinyServer(function(input, output, session) {
       filter(sum(prop > 0) > points_min, # more than n non-zero points
              sum(n > kid_min) > points_min) |> # more than n points with some data
       ungroup()
-  }
+  })
+  
+  uni_lemma_data <- reactive({
+    req(languages_data(), input$languages)
+    languages_data() |> filter(language %in% input$languages)
+  })
 
-  n_languages <- function() {
+  n_languages <- reactive({
     n_distinct(uni_lemma_data()$language)
-  }
+  })
 
   n_cols <- 5
   hgt <- reactive(ceiling(n_languages() / n_cols) * 125 + 100)
   wdth <- reactive(min(n_languages(), n_cols) * 125 + 100)
   
-  crosslinguistic_plot <- function() {
+  crosslinguistic_plot <- reactive({
     req(uni_lemma_data()) 
     
     uld <- uni_lemma_data()
@@ -64,7 +75,7 @@ shinyServer(function(input, output, session) {
       scale_y_continuous(name = "Proportion of children", limits = c(0, 1)) +
       scale_x_continuous(name = "Age (months)", limits = c(8, 36),
                          breaks = seq(12, 36, 6))
-  }
+  })
 
   output$crosslinguistic <- renderPlot(
     crosslinguistic_plot(), height = hgt, width = wdth,

@@ -24,6 +24,7 @@ ui <- function(request) {
           condition = "output.loaded == 1",
           selectizeInput("uni_lemma", label = h4("Meaning"), choices = NULL),
           uiOutput("measure_selector"),
+          uiOutput("languages_selector"),
           width = 3),
         
         br(), bookmark,
