@@ -1,5 +1,6 @@
 # ###################### UNILEMMAS ######################
-all_prop_data <- feather::read_feather("all_prop_data.feather")
+# all_prop_data <- feather::read_feather("all_prop_data.feather")
+all_prop_data <- readRDS("all_prop_data.rds")
 uni_lemmas <- sort(unique(all_prop_data$uni_lemma))
 start_lemma <- "dog"
 start_measure <- "produces"

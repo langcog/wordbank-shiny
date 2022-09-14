@@ -748,16 +748,6 @@
         "vctrs"
       ]
     },
-    "here": {
-      "Package": "here",
-      "Version": "1.0.1",
-      "Source": "Repository",
-      "Repository": "CRAN",
-      "Hash": "24b224366f9c2e7534d2344d10d59211",
-      "Requirements": [
-        "rprojroot"
-      ]
-    },
     "highr": {
       "Package": "highr",
       "Version": "0.9",
@@ -1392,14 +1382,6 @@
       "Hash": "ea3ca1d9473daabb3cd0f1b4f974c1ed",
       "Requirements": []
     },
-    "rprojroot": {
-      "Package": "rprojroot",
-      "Version": "2.0.3",
-      "Source": "Repository",
-      "Repository": "CRAN",
-      "Hash": "1de7ab598047a87bba48434ba35d497d",
-      "Requirements": []
-    },
     "rstudioapi": {
       "Package": "rstudioapi",
       "Version": "0.13",
@@ -1810,8 +1792,8 @@
       "RemoteRepo": "wordbankr",
       "RemoteUsername": "langcog",
       "RemoteRef": "HEAD",
-      "RemoteSha": "c141a73614d8382b07adca096f5db70049a97708",
-      "Hash": "1e67af623af835d5da33a1ffb9f37e24",
+      "RemoteSha": "78e8e4c74170121b6ebd20f9fc64e85198e8d5db",
+      "Hash": "33e99f864bbf64f7fad3f363ae1431c3",
       "Requirements": [
         "DBI",
         "RMySQL",
