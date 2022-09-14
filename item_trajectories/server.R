@@ -1,10 +1,6 @@
 # ###################### ITEM TRAJECTORIES ######################
 source("helper.R")
 
-# TODO:
-# fix color stability
-# update copy
-
 # --------------------- STATE PRELIMINARIES ------------------
 print("loading data")
 admins <- get_administration_data(filter_age = FALSE,
@@ -80,13 +76,10 @@ function(input, output, session) {
       filter(language == input$language, form %in% input$form)
   })
   
-  # note that this should eventually rely on form type? 
-  # maybe then we don't need to do the admins stuff
   measures <- reactive({
     req(form_admins())
-    meas <- "produces"
-    if (!all(is.na(form_admins()$comprehension))) meas <- c("understands", meas) 
-    meas
+    form_type <- unique(form_admins()$form_type)
+    if ("WS" %in% form_type) "produces" else c("understands", "produces")
   })
   
   output$measure_selector <- renderUI({
