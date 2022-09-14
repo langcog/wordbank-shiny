@@ -108,18 +108,16 @@ function(input, output, session) {
   })
   
   # MEASURES
-  # stopgap: hard code those forms that have a comprehension variable.
-  # all others will be production-only for now.
-  # in the end, this will need a specification in the instruments table.
   measures <- reactive({
-    req(input$form)
+    req(instrument())
+    if (instrument()$form_type == "WS") list("Produces" = "production")
+    else list("Produces" = "production", "Understands" = "comprehension")
     
-    
-    if (input$form %in% c("WG", "FormA","IC","Oxford CDI")) {
-      list("Produces" = "production", "Understands" = "comprehension")
-    } else {
-      list("Produces" = "production")
-    }
+    # if (input$form %in% c("WG", "FormA","IC","Oxford CDI")) {
+    #   list("Produces" = "production", "Understands" = "comprehension")
+    # } else {
+    #   list("Produces" = "production")
+    # }
   })
   
   # MEASURE SELECTOR
