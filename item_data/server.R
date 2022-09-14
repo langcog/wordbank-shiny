@@ -31,16 +31,21 @@ function(input, output, session) {
                 choices = forms, selected = start_form)
   })
   
-  output$measure_selector <- renderUI({
+  # instrument
+  instrument <- reactive({
+    req(input$language)
     req(input$form)
     
-    # TODO: use form_type
-    if (input$form %in% "WG") {
-      measures <- list("Produces" = "produces", "Understands" = "understands")
-    } else {
-      measures <- list("Produces" = "produces")
-    }
-    
+    instruments |> 
+      filter(language == input$language, 
+             form == input$form)
+  })
+  
+  output$measure_selector <- renderUI({
+    req(instrument())
+    measures <- if (instrument()$form_type == "WS") list("Produces" = "produces")
+    else list("Produces" = "produces", "Understands" = "understands")
+
     selectInput("measure", label = h4("Measure"),
                 choices = measures, selected = "")
   })
@@ -49,17 +54,13 @@ function(input, output, session) {
     req(input$language)
     req(input$form)
     
-    instrument <- instruments |> 
-      filter(language == input$language, 
-             form == input$form) 
-    
     # defense against selecting instrument with mismatched form
-    if (nrow(instrument) == 0) {
+    if (nrow(instrument()) == 0) {
       age_min = 12
       age_max = 36
       } else {
-        age_min <- instrument$age_min
-        age_max <- instrument$age_max
+        age_min <- instrument()$age_min
+        age_max <- instrument()$age_max
       }
 
     # print(age_min)
@@ -70,17 +71,20 @@ function(input, output, session) {
   })
 
   # -------------------- GET DATA
-  data <- eventReactive(input$go, {
+  
+  inst_data <- reactiveVal()
+  
+  inst_data_get <- observe({
     req(input$language)
     req(input$form)
     req(input$measure)
     req(input$age)
     
-    get_instrument_data(language = input$language, 
-                        form = input$form,
-                        item_info = TRUE,
-                        administration_info = TRUE,
-                        db_args = shiny_db_args) |>
+    new_data <- get_instrument_data(language = input$language, 
+                                    form = input$form,
+                                    item_info = TRUE,
+                                    administration_info = TRUE,
+                                    db_args = shiny_db_args) |>
       filter(item_kind == "word") |>
       gather(measure, value, produces, understands) |>
       filter(measure == input$measure,
@@ -89,10 +93,18 @@ function(input, output, session) {
       group_by(item_id, item_definition, category, age) |>
       summarise(prop = round(sum(value, na.rm = TRUE) / length(value), 2)) |>
       spread(age, prop)
-  })
+    
+    inst_data(new_data)
+  }) |>
+    bindEvent(input$go)
+  
+  inst_data_clear <- observe({
+    inst_data(NULL)
+  }) |>
+    bindEvent(input$language, input$form, input$measure)
   
   output$table <- DT::renderDataTable(
-    data(), server = TRUE, filter = "top", style = "bootstrap",
+    inst_data(), server = TRUE, filter = "top", style = "bootstrap",
     rownames = FALSE, selection = "multiple",
     options = list(orderClasses = TRUE, processing = TRUE, pageLength = 25)
   )
@@ -100,14 +112,14 @@ function(input, output, session) {
   # -------------------- DOWNLOADS ETC 
   
   output$download_button <- renderUI({
-    req(data())
+    req(inst_data())
     downloadButton("download_all", "Download Data", class = "btn-xs")
   })
 
   output$download_all <- downloadHandler(
     filename = function() "wordbank_item_data.csv",
     content <- function(file) {
-      d <- data() |>
+      d <- inst_data() |>
         mutate(downloaded = lubridate::today(), .before = everything())
       write.csv(d, file, row.names = FALSE)
     })
