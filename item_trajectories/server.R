@@ -98,7 +98,7 @@ function(input, output, session) {
       unnest(cols = c(data)) |>
       group_by(item_definition) |>
       count() |>
-      filter(n == length(input$form)) |>
+      filter(n >= length(input$form)) |>
       pull(item_definition)
   })
 
