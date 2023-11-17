@@ -254,16 +254,31 @@ function(input, output, session) {
                                           "last.qp", cex = 1, fontfamily = font))
     
     if (input$smoother == "loess") {
-      g +
-        geom_smooth(aes(x = age, y = prop, colour = item, weight = total),
-                    method = "loess", se = FALSE, size = 1.5)
+      if (n_distinct(traj$form) == 1) {
+        g +
+          geom_smooth(aes(x = age, y = prop, colour = item, weight = total,
+                          group = item_id),
+                      method = "loess", se = FALSE, size = 1.5)
+      } else {
+        g +
+          geom_smooth(aes(x = age, y = prop, colour = item, weight = total),
+                      method = "loess", se = FALSE, size = 1.5)
+      }
     } else if (input$smoother == "logistic") {
-      g +
-        geom_smooth(aes(x = age, y = prop, colour = item, weight = total),
-                    se = FALSE, size = 1.5, span = 1,
-                    method = "glm", method.args = list(family = "binomial"))
+      if (n_distinct(traj$form) == 1) {
+        g +
+          geom_smooth(aes(x = age, y = prop, colour = item, weight = total,
+                          group = item_id),
+                      se = FALSE, size = 1.5, span = 1,
+                      method = "glm", method.args = list(family = "binomial"))
+      } else {
+        g +
+          geom_smooth(aes(x = age, y = prop, colour = item, weight = total),
+                      se = FALSE, size = 1.5, span = 1,
+                      method = "glm", method.args = list(family = "binomial"))
+      }
     }
-    
+      
     # if (!input$mean) return(g)
     # 
     # g +
