@@ -104,8 +104,8 @@ function(input, output, session) {
     bindEvent(input$language, input$form, input$measure)
   
   output$table <- DT::renderDataTable(
-    inst_data(), server = TRUE, filter = "top", style = "bootstrap",
-    rownames = FALSE, selection = "multiple",
+    inst_data(), server = TRUE, style = "bootstrap", #filter = "top", 
+    rownames = FALSE, selection = "none",
     options = list(orderClasses = TRUE, processing = TRUE, pageLength = 25)
   )
   
@@ -124,7 +124,7 @@ function(input, output, session) {
       write.csv(d, file, row.names = FALSE)
     })
   
-  output$loading <- renderImage(list(src = "../images/loading.gif",
+  output$loading <- renderImage(list(src = "images/loading.gif",
                                      contentType = "image/gif",
                                      alt = "Loading"),
                                 deleteFile = FALSE)
