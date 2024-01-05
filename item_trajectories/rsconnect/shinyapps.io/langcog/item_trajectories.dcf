@@ -1,0 +1,12 @@
+name: item_trajectories
+title: item_trajectories
+username: langcog
+account: langcog
+server: shinyapps.io
+hostUrl: https://api.shinyapps.io/v1
+appId: 10874082
+bundleId: 8113259
+url: https://langcog.shinyapps.io/item_trajectories/
+version: 1
+asMultiple: FALSE
+asStatic: FALSE

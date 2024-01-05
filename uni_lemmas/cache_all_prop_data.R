@@ -1,4 +1,4 @@
-source("../common.R")
+source("common.R")
 
 items <- get_item_data()
 uni_lemmas <- items |>

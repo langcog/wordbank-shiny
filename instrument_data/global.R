@@ -1,1 +1,1 @@
-source("../common.R")
+source("common.R")

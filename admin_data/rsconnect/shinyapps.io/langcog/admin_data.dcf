@@ -1,0 +1,12 @@
+name: admin_data
+title: admin_data
+username: langcog
+account: langcog
+server: shinyapps.io
+hostUrl: https://api.shinyapps.io/v1
+appId: 10874210
+bundleId: 8113384
+url: https://langcog.shinyapps.io/admin_data/
+version: 1
+asMultiple: FALSE
+asStatic: FALSE
