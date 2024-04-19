@@ -67,7 +67,7 @@ function(input, output, session) {
       write.csv(df, file, row.names = FALSE)
     })
   
-  output$loading <- renderImage(list(src = "images/loading.gif",
+  output$loading <- renderImage(list(src = "../images/loading.gif",
                                      contentType = "image/gif",
                                      alt = "Loading"),
                                 deleteFile = FALSE)
