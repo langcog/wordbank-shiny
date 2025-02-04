@@ -2,6 +2,7 @@ library(tidyverse)
 library(wordbankr)
 library(shiny)
 library(shinyBS)
+library(markdown)
 library(waiter) # for waiting bar
 # library(spsComps) # for shinyCatch
 
