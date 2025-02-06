@@ -1,8 +1,8 @@
-cp common.R admin_data/
-cp common.R item_data/
-cp common.R networks/
-cp common.R uni_lemmas/
-cp common.R instrument_data/
-cp common.R item_trajectories/
-cp common.R scoring/
-cp common.R vocab_norms/
+cp common.R apps/admin_data/
+cp common.R apps/item_data/
+cp common.R apps/networks/
+cp common.R apps/uni_lemmas/
+cp common.R apps/instrument_data/
+cp common.R apps/item_trajectories/
+cp common.R apps/scoring/
+cp common.R apps/vocab_norms/
