@@ -1,7 +1,8 @@
 # ###################### CHILD-LEVEL SUMMARY DATA (ADMINS) ######################
 flatten_tibble <- function(tib) {
   if (is.null(tib)) return(as.character(NA))
-  map(flatten(tib) |> transpose(),
+  # map(flatten(tib) |> transpose(),
+  map(as.list(tib) |> transpose(),
       \(ls) map2(names(ls), ls, \(n, l) paste(n, l, sep = ": ")) |> paste(collapse = ", ")) |>
     paste(collapse = "; ")
 }

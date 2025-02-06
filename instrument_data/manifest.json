@@ -74,6 +74,33 @@
         "Built": "R 4.3.1; ; 2023-10-07 07:44:34 UTC; unix"
       }
     },
+    "DT": {
+      "Source": "CRAN",
+      "Repository": "https://packagemanager.posit.co/cran/latest",
+      "description": {
+        "Package": "DT",
+        "Type": "Package",
+        "Title": "A Wrapper of the JavaScript Library 'DataTables'",
+        "Version": "0.30",
+        "Authors@R": "c(\n    person(\"Yihui\", \"Xie\", email = \"xie@yihui.name\", role = c(\"aut\", \"cre\")),\n    person(\"Joe\", \"Cheng\", role = \"aut\"),\n    person(\"Xianying\", \"Tan\", role = \"aut\"),\n    person(\"JJ\", \"Allaire\", role = \"ctb\"),\n    person(\"Maximilian\", \"Girlich\", role = \"ctb\"),\n    person(\"Greg\", \"Freedman Ellis\", role = \"ctb\"),\n    person(\"Johannes\", \"Rauh\", role = \"ctb\"),\n    person(\"SpryMedia Limited\", role = c(\"ctb\", \"cph\"), comment = \"DataTables in htmlwidgets/lib\"),\n    person(\"Brian\", \"Reavis\", role = c(\"ctb\", \"cph\"), comment = \"selectize.js in htmlwidgets/lib\"),\n    person(\"Leon\", \"Gersen\", role = c(\"ctb\", \"cph\"), comment = \"noUiSlider in htmlwidgets/lib\"),\n    person(\"Bartek\", \"Szopka\", role = c(\"ctb\", \"cph\"), comment = \"jquery.highlight.js in htmlwidgets/lib\"),\n    person(\"Alex\", \"Pickering\", role = c(\"ctb\")),\n    person(\"William\", \"Holmes\", role = c(\"ctb\")),\n    person(\"Mikko\", \"Marttila\", role = c(\"ctb\")),\n    person(\"Andres\", \"Quintero\", role = c(\"ctb\")),\n    person(\"Stéphane\", \"Laurent\", role = c(\"ctb\")),\n    person(given = \"Posit Software, PBC\", role = c(\"cph\", \"fnd\"))\n    )",
+        "Maintainer": "Yihui Xie <xie@yihui.name>",
+        "Description": "Data objects in R can be rendered as HTML tables using the\n    JavaScript library 'DataTables' (typically via R Markdown or Shiny). The\n    'DataTables' library has been included in this R package. The package name\n    'DT' is an abbreviation of 'DataTables'.",
+        "URL": "https://github.com/rstudio/DT",
+        "BugReports": "https://github.com/rstudio/DT/issues",
+        "License": "GPL-3 | file LICENSE",
+        "Imports": "htmltools (>= 0.3.6), htmlwidgets (>= 1.3), httpuv, jsonlite\n(>= 0.9.16), magrittr, crosstalk, jquerylib, promises",
+        "Suggests": "knitr (>= 1.8), rmarkdown, shiny (>= 1.6), bslib, future,\ntestit, tibble",
+        "VignetteBuilder": "knitr",
+        "RoxygenNote": "7.2.3",
+        "Encoding": "UTF-8",
+        "NeedsCompilation": "no",
+        "Packaged": "2023-10-04 20:26:15 UTC; yihui",
+        "Author": "Yihui Xie [aut, cre],\n  Joe Cheng [aut],\n  Xianying Tan [aut],\n  JJ Allaire [ctb],\n  Maximilian Girlich [ctb],\n  Greg Freedman Ellis [ctb],\n  Johannes Rauh [ctb],\n  SpryMedia Limited [ctb, cph] (DataTables in htmlwidgets/lib),\n  Brian Reavis [ctb, cph] (selectize.js in htmlwidgets/lib),\n  Leon Gersen [ctb, cph] (noUiSlider in htmlwidgets/lib),\n  Bartek Szopka [ctb, cph] (jquery.highlight.js in htmlwidgets/lib),\n  Alex Pickering [ctb],\n  William Holmes [ctb],\n  Mikko Marttila [ctb],\n  Andres Quintero [ctb],\n  Stéphane Laurent [ctb],\n  Posit Software, PBC [cph, fnd]",
+        "Repository": "RSPM",
+        "Date/Publication": "2023-10-05 13:10:02 UTC",
+        "Built": "R 4.3.0; ; 2023-10-06 11:37:12 UTC; unix"
+      }
+    },
     "MASS": {
       "Source": "CRAN",
       "Repository": "https://packagemanager.posit.co/cran/latest",
@@ -814,6 +841,32 @@
         "Built": "R 4.3.0; ; 2023-04-11 04:31:26 UTC; unix"
       }
     },
+    "crosstalk": {
+      "Source": "CRAN",
+      "Repository": "https://packagemanager.posit.co/cran/latest",
+      "description": {
+        "Package": "crosstalk",
+        "Type": "Package",
+        "Title": "Inter-Widget Interactivity for HTML Widgets",
+        "Version": "1.2.0",
+        "Authors@R": "c(\n    person(\"Joe\", \"Cheng\", role = \"aut\", email = \"joe@rstudio.com\"),\n    person(\"Carson\", \"Sievert\", role = c(\"aut\", \"cre\"),\n    email = \"carson@rstudio.com\", comment = c(ORCID = \"0000-0002-4958-2844\")),\n    person(family = \"RStudio\", role = \"cph\"),\n    person(family = \"jQuery Foundation\", role = \"cph\",\n    comment = \"jQuery library and jQuery UI library\"),\n    person(family = \"jQuery contributors\", role = c(\"ctb\", \"cph\"),\n    comment = \"jQuery library; authors listed in inst/www/shared/jquery-AUTHORS.txt\"),\n    person(\"Mark\", \"Otto\", role = \"ctb\",\n    comment = \"Bootstrap library\"),\n    person(\"Jacob\", \"Thornton\", role = \"ctb\",\n    comment = \"Bootstrap library\"),\n    person(family = \"Bootstrap contributors\", role = \"ctb\",\n    comment = \"Bootstrap library\"),\n    person(family = \"Twitter, Inc\", role = \"cph\",\n    comment = \"Bootstrap library\"),\n    person(\"Brian\", \"Reavis\", role = c(\"ctb\", \"cph\"),\n    comment = \"selectize.js library\"),\n    person(\"Kristopher Michael\", \"Kowal\", role = c(\"ctb\", \"cph\"),\n    comment = \"es5-shim library\"),\n    person(family = \"es5-shim contributors\", role = c(\"ctb\", \"cph\"),\n    comment = \"es5-shim library\"),\n    person(\"Denis\", \"Ineshin\", role = c(\"ctb\", \"cph\"),\n    comment = \"ion.rangeSlider library\"),\n    person(\"Sami\", \"Samhuri\", role = c(\"ctb\", \"cph\"),\n    comment = \"Javascript strftime library\")\n    )",
+        "Description": "Provides building blocks for allowing HTML widgets to communicate\n    with each other, with Shiny or without (i.e. static .html files). Currently\n    supports linked brushing and filtering.",
+        "License": "MIT + file LICENSE",
+        "Imports": "htmltools (>= 0.3.6), jsonlite, lazyeval, R6",
+        "Suggests": "shiny, ggplot2, testthat (>= 2.1.0), sass, bslib",
+        "URL": "https://rstudio.github.io/crosstalk/",
+        "BugReports": "https://github.com/rstudio/crosstalk/issues",
+        "RoxygenNote": "7.1.1",
+        "Encoding": "UTF-8",
+        "NeedsCompilation": "no",
+        "Packaged": "2021-11-04 15:35:47 UTC; cpsievert",
+        "Author": "Joe Cheng [aut],\n  Carson Sievert [aut, cre] (<https://orcid.org/0000-0002-4958-2844>),\n  RStudio [cph],\n  jQuery Foundation [cph] (jQuery library and jQuery UI library),\n  jQuery contributors [ctb, cph] (jQuery library; authors listed in\n    inst/www/shared/jquery-AUTHORS.txt),\n  Mark Otto [ctb] (Bootstrap library),\n  Jacob Thornton [ctb] (Bootstrap library),\n  Bootstrap contributors [ctb] (Bootstrap library),\n  Twitter, Inc [cph] (Bootstrap library),\n  Brian Reavis [ctb, cph] (selectize.js library),\n  Kristopher Michael Kowal [ctb, cph] (es5-shim library),\n  es5-shim contributors [ctb, cph] (es5-shim library),\n  Denis Ineshin [ctb, cph] (ion.rangeSlider library),\n  Sami Samhuri [ctb, cph] (Javascript strftime library)",
+        "Maintainer": "Carson Sievert <carson@rstudio.com>",
+        "Repository": "CRAN",
+        "Date/Publication": "2021-11-04 16:30:02 UTC",
+        "Built": "R 4.3.0; ; 2023-04-11 04:38:06 UTC; unix"
+      }
+    },
     "curl": {
       "Source": "CRAN",
       "Repository": "https://packagemanager.posit.co/cran/latest",
@@ -927,31 +980,6 @@
         "Date/Publication": "2024-03-11 14:10:06 UTC",
         "Built": "R 4.3.1; aarch64-apple-darwin20; 2024-03-11 14:47:50 UTC; unix",
         "Archs": "digest.so.dSYM"
-      }
-    },
-    "directlabels": {
-      "Source": "CRAN",
-      "Repository": "https://packagemanager.posit.co/cran/latest",
-      "description": {
-        "Package": "directlabels",
-        "Maintainer": "Toby Dylan Hocking <toby.hocking@r-project.org>",
-        "Author": "Toby Dylan Hocking",
-        "Version": "2023.8.25",
-        "BugReports": "https://github.com/tdhock/directlabels/issues",
-        "License": "GPL-3",
-        "Title": "Direct Labels for Multicolor Plots",
-        "Description": "An extensible framework\n for automatically placing direct labels onto multicolor 'lattice' or\n 'ggplot2' plots.\n Label positions are described using Positioning Methods\n which can be re-used across several different plots.\n There are heuristics for examining \"trellis\" and \"ggplot\" objects\n and inferring an appropriate Positioning Method.",
-        "URL": "https://github.com/tdhock/directlabels",
-        "LazyData": "true",
-        "Suggests": "MASS, knitr, markdown, inlinedocs, RColorBrewer, ggplot2 (>=\n2.0), rlang, lattice, alphahull, nlme, lars, latticeExtra,\ndplyr, ggthemes, testthat",
-        "Imports": "grid (>= 3.0.0), quadprog",
-        "Collate": "utility.function.R compare.R dotplot.R lineplot.R\ndensityplot.R ggplot2.R positioning.functions.R doc.R lattice.R\nscatterplot.R contourplot.R",
-        "VignetteBuilder": "knitr",
-        "NeedsCompilation": "no",
-        "Packaged": "2023-08-29 23:08:35 UTC; th798",
-        "Repository": "CRAN",
-        "Date/Publication": "2023-09-01 08:30:06 UTC",
-        "Built": "R 4.3.0; ; 2023-09-01 09:20:14 UTC; unix"
       }
     },
     "dplyr": {
@@ -1575,6 +1603,34 @@
         "Archs": "htmltools.so.dSYM"
       }
     },
+    "htmlwidgets": {
+      "Source": "CRAN",
+      "Repository": "https://packagemanager.posit.co/cran/latest",
+      "description": {
+        "Package": "htmlwidgets",
+        "Type": "Package",
+        "Title": "HTML Widgets for R",
+        "Version": "1.6.2",
+        "Authors@R": "c(\n    person(\"Ramnath\", \"Vaidyanathan\", role = c(\"aut\", \"cph\")),\n    person(\"Yihui\", \"Xie\", role = c(\"aut\")),\n    person(\"JJ\", \"Allaire\", role = c(\"aut\")),\n    person(\"Joe\", \"Cheng\", role = c(\"aut\"), email = \"joe@rstudio.com\"),\n    person(\"Carson\", \"Sievert\", role = c(\"aut\", \"cre\"), email = \"carson@rstudio.com\", comment = c(ORCID = \"0000-0002-4958-2844\")),\n    person(\"Kenton\", \"Russell\", role = c(\"aut\", \"cph\")),\n    person(\"Ellis\", \"Hughes\", role = c(\"ctb\")),\n    person(family = \"RStudio\", role = \"cph\")\n    )",
+        "Description": "A framework for creating HTML widgets that render in various\n    contexts including the R console, 'R Markdown' documents, and 'Shiny'\n    web applications.",
+        "License": "MIT + file LICENSE",
+        "VignetteBuilder": "knitr",
+        "Imports": "grDevices, htmltools (>= 0.5.4), jsonlite (>= 0.9.16), yaml,\nknitr (>= 1.8), rmarkdown",
+        "Suggests": "testthat",
+        "Enhances": "shiny (>= 1.1)",
+        "URL": "https://github.com/ramnathv/htmlwidgets",
+        "BugReports": "https://github.com/ramnathv/htmlwidgets/issues",
+        "RoxygenNote": "7.2.3",
+        "Encoding": "UTF-8",
+        "NeedsCompilation": "no",
+        "Packaged": "2023-03-17 15:34:40 UTC; cpsievert",
+        "Author": "Ramnath Vaidyanathan [aut, cph],\n  Yihui Xie [aut],\n  JJ Allaire [aut],\n  Joe Cheng [aut],\n  Carson Sievert [aut, cre] (<https://orcid.org/0000-0002-4958-2844>),\n  Kenton Russell [aut, cph],\n  Ellis Hughes [ctb],\n  RStudio [cph]",
+        "Maintainer": "Carson Sievert <carson@rstudio.com>",
+        "Repository": "CRAN",
+        "Date/Publication": "2023-03-17 16:50:06 UTC",
+        "Built": "R 4.3.0; ; 2023-04-11 04:45:00 UTC; unix"
+      }
+    },
     "httpuv": {
       "Source": "CRAN",
       "Repository": "https://packagemanager.posit.co/cran/latest",
@@ -1848,6 +1904,31 @@
         "Repository": "CRAN",
         "Date/Publication": "2023-04-05 17:43:19 UTC",
         "Built": "R 4.3.1; aarch64-apple-darwin20; 2023-06-16 21:53:30 UTC; unix"
+      }
+    },
+    "lazyeval": {
+      "Source": "CRAN",
+      "Repository": "https://packagemanager.posit.co/cran/latest",
+      "description": {
+        "Package": "lazyeval",
+        "Version": "0.2.2",
+        "Title": "Lazy (Non-Standard) Evaluation",
+        "Description": "An alternative approach to non-standard evaluation using\n    formulas. Provides a full implementation of LISP style 'quasiquotation',\n    making it easier to generate code with other code.",
+        "Authors@R": "c(\n    person(\"Hadley\", \"Wickham\", ,\"hadley@rstudio.com\", c(\"aut\", \"cre\")),\n    person(\"RStudio\", role = \"cph\")\n    )",
+        "License": "GPL-3",
+        "LazyData": "true",
+        "Depends": "R (>= 3.1.0)",
+        "Suggests": "knitr, rmarkdown (>= 0.2.65), testthat, covr",
+        "VignetteBuilder": "knitr",
+        "RoxygenNote": "6.1.1",
+        "NeedsCompilation": "yes",
+        "Packaged": "2019-03-15 14:18:01 UTC; lionel",
+        "Author": "Hadley Wickham [aut, cre],\n  RStudio [cph]",
+        "Maintainer": "Hadley Wickham <hadley@rstudio.com>",
+        "Repository": "CRAN",
+        "Date/Publication": "2019-03-15 17:50:07 UTC",
+        "Built": "R 4.3.0; aarch64-apple-darwin20; 2023-04-11 04:32:14 UTC; unix",
+        "Archs": "lazyeval.so.dSYM"
       }
     },
     "lifecycle": {
@@ -2382,28 +2463,6 @@
         "Repository": "RSPM",
         "Date/Publication": "2023-08-10 08:20:07 UTC",
         "Built": "R 4.3.0; x86_64-pc-linux-gnu; 2024-01-03 00:07:20 UTC; unix"
-      }
-    },
-    "quadprog": {
-      "Source": "CRAN",
-      "Repository": "https://packagemanager.posit.co/cran/latest",
-      "description": {
-        "Package": "quadprog",
-        "Type": "Package",
-        "Title": "Functions to Solve Quadratic Programming Problems",
-        "Version": "1.5-8",
-        "Date": "2019-11-20",
-        "Author": "S original by Berwin A. Turlach <Berwin.Turlach@gmail.com> \n        R port by Andreas Weingessel <Andreas.Weingessel@ci.tuwien.ac.at>\n        Fortran contributions from Cleve Moler (dposl/LINPACK and\n        (a modified version of) dpodi/LINPACK) ",
-        "Maintainer": "Berwin A. Turlach <Berwin.Turlach@gmail.com>",
-        "Description": "This package contains routines and documentation for\n        solving quadratic programming problems.",
-        "Depends": "R (>= 3.1.0)",
-        "License": "GPL (>= 2)",
-        "NeedsCompilation": "yes",
-        "Packaged": "2019-11-20 06:04:34 UTC; berwin",
-        "Repository": "CRAN",
-        "Date/Publication": "2019-11-20 08:20:02 UTC",
-        "Built": "R 4.3.0; aarch64-apple-darwin20; 2023-04-11 04:33:08 UTC; unix",
-        "Archs": "quadprog.so.dSYM"
       }
     },
     "quantreg": {
@@ -3613,38 +3672,31 @@
       }
     },
     "wordbankr": {
-      "Source": "github",
+      "Source": "CRAN",
       "Repository": null,
       "description": {
         "Package": "wordbankr",
         "Type": "Package",
         "Title": "Accessing the Wordbank Database",
         "Description": "Connecting to Wordbank, an open repository for developmental\n    vocabulary data. For more information on the underlying data, see\n    <http://wordbank.stanford.edu>.",
-        "Version": "1.0.3.9000",
+        "Version": "1.0.2",
         "Authors@R": "c(\n    person(\"Mika\", \"Braginsky\", email = \"mika.br@gmail.com\", role = c(\"aut\", \"cre\")),\n    person(\"Daniel\", \"Yurovsky\", email = \"yurovsky@stanford.edu\", role = \"ctb\"),\n    person(\"Michael\", \"Frank\", email = \"mcfrank@stanford.edu\", role = \"ctb\"),\n    person(\"Danielle\", \"Kellier\", email = \"dkellier@stanford.edu\", role = \"ctb\"),\n    person(\"Alvin\", \"Tan\", email = \"tanawm@stanford.edu\", role = \"ctb\")\n    )",
         "Depends": "R (>= 4.0)",
         "License": "GPL-3",
-        "URL": "https://langcog.github.io/wordbankr/, https://github.com/langcog/wordbankr/",
+        "URL": "https://langcog.github.io/wordbankr/,\nhttps://github.com/langcog/wordbankr/",
         "BugReports": "https://github.com/langcog/wordbankr/issues/",
-        "Imports": "assertthat (>= 0.2.1),\nDBI (>= 1.1.3),\ndbplyr (>= 2.3.4),\ndplyr (>= 1.1.3),\nglue (>= 1.6.2),\njsonlite (>= 1.8.7),\nlifecycle (>= 1.0.3),\npurrr (>= 1.0.2),\nquantregGrowth (>= 1.7-0),\nrlang (>= 1.1.1),\nRMySQL (>= 0.10.26),\nrobustbase (>= 0.99-0),\nstringr (>= 1.5.0),\ntidyr (>= 1.3.0)",
-        "Suggests": "ggplot2,\nknitr,\nrmarkdown",
+        "Imports": "assertthat (>= 0.2.1), DBI (>= 1.1.3), dbplyr (>= 2.3.4),\ndplyr (>= 1.1.3), glue (>= 1.6.2), jsonlite (>= 1.8.7),\nlifecycle (>= 1.0.3), purrr (>= 1.0.2), quantregGrowth (>=\n1.7-0), rlang (>= 1.1.1), RMySQL (>= 0.10.26), robustbase (>=\n0.99-0), stringr (>= 1.5.0), tidyr (>= 1.3.0)",
+        "Suggests": "ggplot2, knitr, rmarkdown",
         "VignetteBuilder": "knitr",
-        "RoxygenNote": "7.3.1",
+        "RoxygenNote": "7.2.3",
         "Encoding": "UTF-8",
+        "NeedsCompilation": "no",
+        "Packaged": "2023-11-09 20:23:22 UTC; mikabr",
         "Author": "Mika Braginsky [aut, cre],\n  Daniel Yurovsky [ctb],\n  Michael Frank [ctb],\n  Danielle Kellier [ctb],\n  Alvin Tan [ctb]",
         "Maintainer": "Mika Braginsky <mika.br@gmail.com>",
-        "Built": "R 4.3.1; ; 2024-07-08 19:29:39 UTC; unix",
-        "RemoteType": "github",
-        "RemoteHost": "api.github.com",
-        "RemoteUsername": "langcog",
-        "RemoteRepo": "wordbankr",
-        "RemoteRef": "main",
-        "RemoteSha": "35077eb3652f58367f85b83c74dc58b36a6c4ad0",
-        "GithubHost": "api.github.com",
-        "GithubRepo": "wordbankr",
-        "GithubUsername": "langcog",
-        "GithubRef": "main",
-        "GithubSHA1": "35077eb3652f58367f85b83c74dc58b36a6c4ad0"
+        "Repository": "CRAN",
+        "Date/Publication": "2023-11-09 23:40:02 UTC",
+        "Built": "R 4.3.1; ; 2023-11-15 04:29:47 UTC; unix"
       }
     },
     "xfun": {
@@ -3758,34 +3810,22 @@
   },
   "files": {
     ".Rprofile": {
-      "checksum": "38cf1ec721be41850d0ecc2da6d93f83"
+      "checksum": "4405ec56a2625fabc4113cd818c0179a"
     },
     "common.R": {
       "checksum": "d18444d917b40ebf09e59d5bcd5e3d09"
     },
-    "docs/description.md": {
-      "checksum": "8ff228e9bd1363a411046abb65f129c4"
-    },
-    "docs/details.md": {
-      "checksum": "6651bc57f1336d5aecc96f700af626f8"
-    },
-    "docs/popovers.json": {
-      "checksum": "fdda0169d4ddd25a82d11f650a6a6a47"
-    },
     "global.R": {
-      "checksum": "9a64f9afba464f939b93111bfeb1a70c"
-    },
-    "helper.R": {
-      "checksum": "7115a939c8bc4d27cfc19e38c4aedac8"
+      "checksum": "1888302aaf51ebbd36493dc0bf7d3a5c"
     },
     "renv.lock": {
-      "checksum": "70cf69bea27857b09916f3b7250a9825"
+      "checksum": "53acd3a86e470e93a7672f6eeacfac47"
     },
     "server.R": {
-      "checksum": "32f86605445bff98fbabe26be37f5585"
+      "checksum": "2c023e33c0db4b6a06bf8724236e8614"
     },
     "ui.R": {
-      "checksum": "e5c579a572f90fe9b0171b106b824557"
+      "checksum": "a9409731ac2b2ef61501a52a4e23292d"
     }
   },
   "users": null
