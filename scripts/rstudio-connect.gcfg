@@ -1,0 +1,16 @@
+; Posit Connect configuration file
+
+[Server]
+Address = http://wordbank-shiny.com/
+SenderEmail = "mika.br@gmail.com"
+
+[HTTPS]
+Listen = :443
+Certificate = /etc/rstudio-connect/wordbank-shiny_com.crt
+Key = /etc/rstudio-connect/private.key
+
+[HTTPRedirect]
+Listen = :80
+
+[Authentication]
+Provider = "password"

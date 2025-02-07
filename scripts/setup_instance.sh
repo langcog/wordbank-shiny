@@ -13,22 +13,16 @@ sudo apt update && sudo apt install \
 # configure mysql
 sudo mysql < scripts/setup_db.sql
 
-# download and install shiny server (and libssl1.1 due to an issue with the shiny server pro build, will probably get fixed in later releases)
-wget http://security.ubuntu.com/ubuntu/pool/main/o/openssl/libssl1.1_1.1.1-1ubuntu2.1~18.04.20_amd64.deb
-sudo gdebi libssl1.1_1.1.1-1ubuntu2.1~18.04.20_amd64.deb
-wget https://s3.amazonaws.com/rstudio-shiny-server-pro-build/ubuntu-18.04/x86_64/shiny-server-commercial-1.5.18.1120-amd64.deb
-sudo gdebi shiny-server-commercial-1.5.18.1120-amd64.deb
-rm *.deb
+# download and install posit connect
+# replace ubuntu version if not 22.04, update connect version
+# latest at https://docs.posit.co/connect/admin/getting-started/local-install/server-install/
+curl -O https://cdn.posit.co/connect/2025.01/rstudio-connect_2025.01.0~ubuntu22_amd64.deb
+sudo apt install ./rstudio-connect_2025.01.0~ubuntu22_amd64.deb
 
-# configure shiny server
-# first deactivate license on previous instance if needed
-# sudo /opt/shiny-server/bin/license-manager deactivate
 # activate license
-sudo /opt/shiny-server/bin/license-manager activate ${LICENSE_KEY}
-# copy configuration file from repo to server location
-sudo cp scripts/shiny-server.conf /etc/shiny-server/shiny-server.conf
-# restart server
-sudo systemctl restart shiny-server
+sudo /opt/rstudio-connect/bin/license-manager activate <LICENSE-KEY>
 
-# install R packages
-sudo Rscript scripts/setup_r.R
+# configure connect
+# e.g. copy of scripts/rstudio-connect.gcfg
+sudo cp scripts/rstudio-connect.gcfg /etc/rstudio-connect/rstudio-connect.gcfg
+sudo nano /etc/rstudio-connect/rstudio-connect.gcfg
