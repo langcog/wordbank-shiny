@@ -54,6 +54,7 @@ Listen = :80
 ## Switching hosts
 - There are backup versions of all the apps deployed to `shinyapps.io` under the `mcfrank@stanford.edu` account. If the Connect server is down for whatever reason, the Wordbank website can be set up to use those apps instead.
 - In [this file in the wordbank repo](https://github.com/langcog/wordbank/blob/master/wordbank/settings.py), change the variable `SHINY_SERVER_URL` to `"https://wordbank-shiny.com"` (or a different host if needed), then deploy wordbank to elastic beanstalk (`eb deploy wordbank-dev` and `eb deploy wordbank-prod` once you have the AWS CLI installed/configured).
+- If the apps are deployed on a different host that also has a copy of the database running locally, [`common.R`](https://github.com/langcog/wordbank-shiny/blob/78d862e7e0557f455a5cfc2b74651399b5b23274/common.R#L28) needs to be changed to check for the right hostname (and changes need to be [propagated to all apps](https://github.com/langcog/wordbank-shiny/blob/main/scripts/update_common.sh)).
 
 ## Updating data
 - The Shiny apps use Wordbank data from a local database on the same EC2 instance that's running the Connect instance (because this makes data loading much faster). This database is a copy of the main Wordbank database on RDS.
