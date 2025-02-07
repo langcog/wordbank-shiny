@@ -29,7 +29,7 @@ rsconnect::deployApp()
 ```
 - Once the app is done deploying, open it in the Connect admin interface and under "Access", change "Sharing" to "Anyone - no login required", and under "Content URL", set "Path" to a short identifier for the app (ideally the same as the app's directory in the repo for clarify).
 - In [this file in the `langcog/wordbank` repo](https://github.com/langcog/wordbank/blob/master/wordbank/static/json/analyses.json), add an entry for the app with its title, name (IMPORTANT: this name needs to be the same as what you used for the path above), and thumbnail. Note that the json file has the apps structured into sections, and this structure is reflected in the boxes on the [Data page](https://wordbank.stanford.edu/data/) and in the navbar on [each app's page](https://wordbank.stanford.edu/data/?name=vocab_norms).
-- Deploy Wordbank to Elastic Beanstalk (`eb deploy wordbank-dev` and `eb deploy wordbank-prod` assuming your AWS CLI is installed + configured + permissioned).
+- Deploy Wordbank to Elastic Beanstalk (git commit, then `eb deploy wordbank-dev` and `eb deploy wordbank-prod` assuming your AWS CLI is installed + configured + permissioned).
 
 ## Administering the Connect server
 - For most changes, deploying apps with the above workflow is all that's needed and there's no need to ssh into the server. Direct server access is needed for things like: something needs to be changed about the Connect configuration; a new Connect license needs to be activated; the system needs changes (e.g. new system-level dependencies or a new version of R); or the Connect server needs to be restarted for whatever reason.
