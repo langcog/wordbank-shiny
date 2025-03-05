@@ -51,6 +51,18 @@ Key = /etc/rstudio-connect/private.key
 Listen = :80
 ```
 
+## Setting up new Connect instance
+- If a new Connect instance needs to be set up for some reason (e.g. migration to new server), follow the instructions [here](https://docs.posit.co/connect/admin/getting-started/local-install/server-install/). The steps are overviewed below assuming the OS is Ubuntu and all needed resources/configuration match the current ones.
+- Install R: `sudo apt install r-base-core`.
+- Download Connect (updating date/version):
+```
+curl -O https://cdn.posit.co/connect/2025.02/rstudio-connect_2025.02.0~ubuntu24_amd64.deb
+sudo apt install ./rstudio-connect_2025.02.0~ubuntu24_amd64.deb
+```
+- Activate license: `sudo /opt/rstudio-connect/bin/license-manager activate <LICENSE-KEY>`.
+- Modify as needed the configuration file at `/etc/rstudio-connect/rstudio-connect.gcfg`. Copy of current config lives [here](https://github.com/langcog/wordbank-shiny/blob/main/scripts/rstudio-connect.gcfg). This configuration needs an SSL certificate for the server's address ([see here for setup instructions](https://paper.dropbox.com/doc/shiny-ssl-setup--ChGgWhFg7fesFv7xQcsvTnBVAg-Nnin7iBJip0yHQ8G31hCN)) and SMTP credentials + identity verification for [Amazon SES](https://us-west-2.console.aws.amazon.com/ses/home?region=us-west-2#/smtp) (or a different SMTP provider).
+- Verify that Connect is running: `sudo systemctl status rstudio-connect`, if it's not then debug using log files at `/var/log/rstudio/rstudio-connect/` (e.g. `sudo tail /var/log/rstudio/rstudio-connect/rstudio-connect.log`. Known issue is that on some cases Connect has trouble finding the R installation, this can fixed by changing some values in its config, [see here](https://support.posit.co/hc/en-us/articles/10792878598679-Resolving-the-Could-not-detect-R-Error).
+
 ## Switching hosts
 - There are backup versions of all the apps deployed to `shinyapps.io` under the `mcfrank@stanford.edu` account. If the Connect server is down for whatever reason, the Wordbank website can be set up to use those apps instead.
 - In [this file in the wordbank repo](https://github.com/langcog/wordbank/blob/master/wordbank/settings.py), change the variable `SHINY_SERVER_URL` to `"https://wordbank-shiny.com"` (or a different host if needed), then deploy wordbank to elastic beanstalk (`eb deploy wordbank-dev` and `eb deploy wordbank-prod` once you have the AWS CLI installed/configured).
