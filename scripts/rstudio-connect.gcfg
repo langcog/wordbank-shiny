@@ -9,7 +9,7 @@ EmailProvider = "SMTP"
 Host = "email-smtp.us-west-2.amazonaws.com"
 Port = 587
 User = "AKIAT5D2WB2Y7YX73RGG"
-Password = "BKE5BLvXoikKyEm1PGn/JFwgOUgn4Iy5AbhD8t6vmcQv"
+Password = ""
 
 [Notifications "errors"]
 Email = "mika.br@gmail.com"
