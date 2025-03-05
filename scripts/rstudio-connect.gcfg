@@ -2,7 +2,18 @@
 
 [Server]
 Address = http://wordbank-shiny.com/
-SenderEmail = "mika.br@gmail.com"
+SenderEmail = "connect@wordbank-shiny.com"
+EmailProvider = "SMTP"
+
+[SMTP]
+Host = "email-smtp.us-west-2.amazonaws.com"
+Port = 587
+User = "AKIAT5D2WB2Y7YX73RGG"
+Password = "BKE5BLvXoikKyEm1PGn/JFwgOUgn4Iy5AbhD8t6vmcQv"
+
+[Notifications "errors"]
+Email = "mika.br@gmail.com"
+Email = "mcfrank@stanford.edu"
 
 [HTTPS]
 Listen = :443
