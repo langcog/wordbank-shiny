@@ -251,7 +251,7 @@ function(input, output, session) {
       directlabels::geom_dl(aes(x = age, y = prop, colour = item, label = item),
                             data = dl,
                             method = list(directlabels::dl.trans(x = x + 0.3),
-                                          "last.qp", cex = 1, fontfamily = font))
+                                          "last.points", cex = 1, fontfamily = font))
     
     if (input$smoother == "loess") {
       if (n_distinct(traj$form) == 1) {
