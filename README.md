@@ -36,8 +36,8 @@ rsconnect::deployApp()
 - See the [Connect docs](https://docs.posit.co/connect/admin/) for everything about configuration/management.
 - Specifically, to restart Connect, run `sudo systemctl restart rstudio-connect`. To change the Connect configuration, make changes to the `/etc/rstudio-connect/rstudio-connect.gcfg` file and then restart Connect (for reference, a version of the config is saved in this repo as [`scripts/rstudio-connect.gcfg`](https://github.com/langcog/wordbank-shiny/blob/main/scripts/rstudio-connect.gcfg)). Activate a new license key by running:
 ```
-sudo /opt/rstudio-connect/bin/license-manager activate <LICENSE-KEY>
 sudo /opt/rstudio-connect/bin/license-manager deactivate
+sudo /opt/rstudio-connect/bin/license-manager activate <LICENSE-KEY>
 sudo systemctl restart rstudio-connect
 ```
 - If `https://wordbank-shiny.com` has a new SSL certificate, the certificate and private key files need to be placed in `/etc/rstudio-connect/`, as per the [setting in the configuration file](https://docs.posit.co/connect/admin/getting-started/local-install/initial-configuration/ssl-certificates/) being:
