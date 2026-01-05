@@ -1,0 +1,63 @@
+.popover { width: 150px; }
+
+.field-ui-container .shiny-input-container {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 0;
+}
+
+.field-ui-container label {
+  margin-bottom: 0;
+  font-weight: normal;
+}
+
+.field-ui-container .selectize-input {
+  min-width: 150px;
+}
+
+.field-ui-container .selectize-control::before {
+  content: "⬅";
+  color: grey;
+}
+
+.field-ui-container .shiny-input-select {
+  display: inline-flex;
+  align-items: center;
+  column-gap: .2em;
+}
+
+.field-controls {
+  display: flex;
+}
+
+.field-controls .shiny-input-container:nth-child(2) {
+  flex: auto;
+}
+
+.field-controls .checkbox {
+  margin-bottom: 0;
+  margin-top: 0;
+  display: flex;
+}
+
+.field-ui-container, .field-ui-container > div {
+  display: flex;
+  flex-direction: column;
+  row-gap: 0.25em;
+}
+
+.field-ui-container {
+  row-gap: 1.5em;
+}
+
+.dataTables_wrapper {
+  display: inline-table;
+}
+
+.shiny-output-error { visibility: hidden; }
+.shiny-output-error:before { visibility: hidden; }
+
+.btn-sm, .btn-group-sm > .btn {
+  padding: 3px 5px;
+}

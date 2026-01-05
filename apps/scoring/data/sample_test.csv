@@ -1,0 +1,13 @@
+subid,age_months,gender,vocab_nwords,complexity,issue
+sample_1,16,male,100,10,none
+sample_2,16,female,100,10,none
+sample_3,30,male,100,10,none
+sample_4,30,female,100,10,none
+sample_5,14,female,100,10,low age
+sample_6,32,female,100,10,high age
+sample_7,16,female,-1,10,low vocab
+sample_8,16,female,700,10,high vocab
+sample_9,16,female,100,40,high complexity
+sample_10,16,female,700,40,high vocab and complexity
+sample_11,16,female,360,,max vocab
+sample_12,30,female,50,,min vocab

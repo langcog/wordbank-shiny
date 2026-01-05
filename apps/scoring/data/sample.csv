@@ -1,0 +1,9 @@
+subid,age_months,gender,vocab_nwords,complexity
+sample_1,16,male,55,1
+sample_2,17,female,61,1
+sample_3,18,female,311,2
+sample_4,17,male,94,3
+sample_5,16,male,500,5
+sample_6,17,female,183,10
+sample_7,18,female,33,15
+sample_8,16,female,199,20

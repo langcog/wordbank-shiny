@@ -1,0 +1,18 @@
+field,value,label
+language,eng,English (American)
+language,spa,Spanish (Mexican)
+form,ws,Words and Sentences
+form,wg,Words and Gestures
+sex,both,Both
+sex,girls,Female
+sex,boys,Male
+measure,prod,Production
+measure,comp,Comprehension
+measure,earlygest,Early Gestures
+measure,lategest,Late Gestures
+measure,phrases,Phrases
+measure,totgest,Total Gestures
+measure,wordend2,Word Endings
+measure,wordforms,Word Forms
+measure,complex,Complexity
+measure,M3L,M3L
