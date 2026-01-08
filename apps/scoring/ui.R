@@ -54,11 +54,20 @@ ui <- function(request) {
             individual = TRUE,
           ),
           hr(),
-          div(class = "field-ui-container",
-              uiOutput("fields_static"),
-              uiOutput("fields_sex"),
-              uiOutput("value_map"),
-              uiOutput("fields_measures"),
+          div(class = "field-panel-container",
+              uiOutput("helptext_req"),
+              div(class = "field-panel",
+                  div(class = "field-ui-container",
+                      uiOutput("fields_static"),
+                      uiOutput("fields_sex"),
+                      uiOutput("value_map"))
+              ),
+              div(class = "field-panel",
+                  uiOutput("helptext_measures"),
+                  div(class = "field-ui-container",
+                      uiOutput("fields_measures")
+                  )
+              )
           )
         ),
       ),

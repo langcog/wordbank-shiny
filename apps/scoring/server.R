@@ -80,6 +80,12 @@ function(input, output, session) {
   # static fields (dropdowns always shown)
   static_fields <- c("Subject ID" = "id", "Age (months)" = "age", "Sex" = "sex")
   
+  output$helptext_req <- renderUI({
+    req(user_data())
+    span(class = "helptext",
+         "Map these required variables to the variable names in your file.")
+  })
+  
   # input rows for static fields
   output$fields_static <- renderUI({
     req(user_data())
@@ -90,6 +96,12 @@ function(input, output, session) {
   output$fields_sex <- renderUI({
     req(user_data())
     imap(static_fields[static_fields == "sex"], partial(field_input, checked = input$norms_type != "not_sex", disabled = TRUE))
+  })
+  
+  output$helptext_measures <- renderUI({
+    req(user_data())
+    span(class = "helptext",
+         "Map these CDI summary scores to the variable names in your file.  Check the box to indicate the scores for which you want percentiles to be calculated.")
   })
   
   # input rows for dynamic fields (set of measures depending on input instrument)

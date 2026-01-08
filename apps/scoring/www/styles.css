@@ -48,7 +48,25 @@
 }
 
 .field-ui-container {
+  row-gap: 1em;
+}
+
+.field-panel-container {
+  line-height: 1.15;
+  display: flex;
+  flex-direction: column;
   row-gap: 1.5em;
+}
+
+.field-panel {
+  display: flex;
+  flex-direction: column;
+  row-gap: 0.5em;
+}
+
+.helptext {
+  font-style: italic;
+  font-size: 90%;
 }
 
 .dataTables_wrapper {
