@@ -2,7 +2,7 @@
 
 pops <- jsonlite::read_json("docs/popovers.json")
 
-theme_set(theme_bw(base_size = 8, base_family = .font))
+theme_set(theme_bw(base_size = 8, base_family = font))
 theme_update(panel.grid = ggplot2::element_blank(),
              strip.background = ggplot2::element_blank(),
              legend.key = ggplot2::element_blank(),
@@ -378,7 +378,7 @@ function(input, output, session) {
       directlabels::geom_dl(aes(label = percentile), data = pct,
                             method = list("last.qp", directlabels::dl.trans(x = x + 0.2),
                                           cex = 0.4,
-                                          fontfamily = .font)) +
+                                          fontfamily = font)) +
       langcog::scale_color_solarized(guide = "none") +
       scale_x_continuous(name = "Age (months)",
                          breaks = c(min(measure_norms$age), max(measure_norms$age)),

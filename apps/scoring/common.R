@@ -9,14 +9,13 @@ library(glue)
 
 select <- dplyr::select
 
-.font <- "Source Sans 3"
-# .font <- "Source Sans Pro"
-sysfonts::font_add_google(.font)
+font <- "Source Sans 3"
+# font <- "Source Sans Pro"
+sysfonts::font_add_google(font)
 showtext::showtext_auto()
 showtext::showtext_opts(dpi = 300)
 
-theme_set(theme_bw(base_size = 16, base_family = .font))
-# theme_set(theme_bw(base_family = .font))
+theme_set(theme_bw(base_size = 16, base_family = font))
 theme_update(panel.grid = ggplot2::element_blank(),
              strip.background = ggplot2::element_blank(),
              legend.key = ggplot2::element_blank(),
