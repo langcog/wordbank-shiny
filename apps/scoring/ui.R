@@ -21,7 +21,7 @@ ui <- function(request) {
     
     fluidRow(
       column(
-        width = 3,
+        width = 4,
         wellPanel(
           uiOutput("language_selector"),
           # bsPopover("language_selector", title = NULL,
@@ -38,7 +38,7 @@ ui <- function(request) {
           radioGroupButtons(
             inputId = "norms_type",
             label = "Which set(s) of norms to use",
-            choices = c("Sex-specific norms" = "sex", "Combined norms" = "not_sex", "Both norms" = "both"),
+            choices = c("Sex-specific" = "sex", "Non-sex-specific" = "not_sex", "Both" = "both"),
             selected = "both",
             status = "primary",
             size = "sm",
@@ -73,7 +73,7 @@ ui <- function(request) {
       ),
       
       column(
-        width = 9,
+        width = 8,
         plotOutput("norms_preview", width = "auto", height = "auto"),
         DTOutput("scores_table"),
         uiOutput("download_table_button")
