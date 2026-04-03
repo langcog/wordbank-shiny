@@ -12,6 +12,12 @@ theme_update(panel.grid = ggplot2::element_blank(),
 
 # --------------------- STATE PRELIMINARIES ------------------
 
+# load sample data files
+samples <- list(
+  ws = read_csv("data/sample_ws.csv"),
+  wg = read_csv("data/sample_wg.csv")
+)
+
 # load saved metadata files
 norms <- read_rds("norms/norms_tables.rds")
 label <- read_csv("norms/metadata/labels.csv")
@@ -62,7 +68,7 @@ function(input, output, session) {
   output$file_selector <- renderUI({
     req(measures())
     filebox <- fileInput("user_file", "Choose file", accept = ".csv")
-    if (input$sample_data)  shinyjs::disabled(filebox) else filebox
+    if (input$sample_data) shinyjs::disabled(filebox) else filebox
   })
   
   # create input row (checkbox + dropdown) for a given field
@@ -134,7 +140,8 @@ function(input, output, session) {
   
   # read in user data
   user_data <- reactive({
-    if (input$sample_data) return(read_csv("data/sample.csv"))
+    # if (input$sample_data) return(read_csv("data/sample.csv"))
+    if (input$sample_data) return(samples[[input$form]])
     file <- input$user_file
     ext <- tools::file_ext(file$datapath)
     validate(need(ext == "csv", "Please upload a csv file"))
@@ -301,7 +308,7 @@ function(input, output, session) {
       }) |> transpose() |> map(unlist) |> map(unname) |> map(\(v) discard(v, is.na))
       
       # add messages to data, collapsed into single string per row
-      start_data <- start_data |> mutate(errors = map_chr(errors, \(e) paste(e, collapse = ", ")))
+      start_data <- start_data |> mutate(errors = map_chr(errors, \(e) ifelse(length(e) == 0, "", paste(e, collapse = ", "))))
     }
     
     # if scoring is possible, add percentiles for each included measure

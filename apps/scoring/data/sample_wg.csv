@@ -1,0 +1,7 @@
+subject_id,age,sex,understood,produced,phrases,early_gestures,later_gestures,total_gestures
+1111,15,Male,9,4,5,5,3,8
+1112,19,Male,47,45,3,4,4,8
+1113,21,Male,300,250,20,18,45,63
+1114,15,Female,8,8,8,8,11,19
+1115,13,Female,151,124,15,17,30,47
+1116,9,Male,14,11,12,12,17,29
